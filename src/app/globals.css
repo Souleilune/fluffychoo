@@ -15,9 +15,6 @@
 
   /* Custom animation */
   --animate-blob: blob 7s infinite;
-
-  /* Poppins font family */
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Custom Animations */
@@ -51,22 +48,4 @@
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
-}
-
-/* Custom scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #FAF3E0;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #FFD700, #FFA500);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #FFA500, #FFD700);
 }

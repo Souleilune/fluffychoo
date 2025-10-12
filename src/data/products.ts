@@ -9,10 +9,10 @@ export interface Product {
 export const products: Product[] = [
   {
     id: 1,
-    name: "Golden Elegance Watch",
-    price: 299.99,
-    image: "/products/watch.jpg",
-    description: "Luxury timepiece with golden accents"
+    name: "Mochi Brownies Classic",
+    price: 2.99,
+    image: "/products/choos.png",
+    description: "Classic brownies with fluffy feeling"
   },
   {
     id: 2,

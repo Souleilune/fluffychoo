@@ -35,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </p>
           <div className="flex items-baseline gap-2 pt-2">
             <span className="text-3xl font-bold text-yellow-200">
-              {product.price.toFixed(2)}
+              ₱ {product.price.toFixed(2)}
             </span>
             <span className="text-sm text-yellow-300 font-medium">each</span>
           </div>

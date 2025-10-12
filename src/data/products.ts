@@ -16,23 +16,23 @@ export const products: Product[] = [
   },
   {
     id: 2,
-    name: "Amber Crystal Necklace",
-    price: 189.99,
-    image: "/products/necklace.jpg",
-    description: "Handcrafted amber jewelry piece"
+    name: "Soon",
+    price: 0.00,
+    image: "/products/packaging.png",
+    description: "You deserve softness!"
   },
   {
     id: 3,
-    name: "Vintage Gold Ring",
-    price: 249.99,
-    image: "/products/ring.jpg",
-    description: "Timeless gold ring design"
+    name: "Soon",
+    price: 0.00,
+    image: "/products/packaging.png",
+    description: "You deserve softness!"
   },
   {
     id: 4,
-    name: "Luxury Gift Set",
-    price: 399.99,
-    image: "/products/giftset.jpg",
-    description: "Premium gift collection"
+    name: "Soon",
+    price: 0.00,
+    image: "/products/packaging.png",
+    description: "You deserve softness!"
   }
 ];

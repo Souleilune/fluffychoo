@@ -13,9 +13,9 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-24 sm:h-28 md:h-32">
           {/* Logo - Much Bigger */}
           <Link href="/" className="flex items-center group z-50">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 flex-shrink-0">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-36 lg:h-36 flex-shrink-0">
               <Image 
-                src="/logo.svg" 
+                src="/choologo.png" 
                 alt="Fluffy Choy Logo"
                 fill
                 className="object-contain group-hover:scale-110 transition-transform duration-300"

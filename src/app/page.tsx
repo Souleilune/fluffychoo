@@ -53,9 +53,6 @@ export default function Home() {
             Handpicked items that embody luxury and sophistication
           </p>
         </div>
-        <button className="bg-amber-500 text-white px-4 py-2 rounded">
-          Test Button
-        </button>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

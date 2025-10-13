@@ -1,10 +1,23 @@
-// src/app/page.tsx
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { Sparkles, Wheat, ChefHat, Cookie } from 'lucide-react';
 import { products } from '@/data/products';
+import OrderForm from '@/components/OrderForm';
 
 export default function Home() {
+  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
+
+  const handleOrderClick = (productName?: string) => {
+    if (productName) {
+      setSelectedProduct(productName);
+    }
+    setIsOrderFormOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Navigation */}
@@ -39,12 +52,12 @@ export default function Home() {
             </div>
 
             {/* CTA Button */}
-            <Link 
-              href="#products"
+            <button 
+              onClick={() => handleOrderClick()}
               className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
             >
               Order Now
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
@@ -131,7 +144,10 @@ export default function Home() {
                   
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
-                    <button className="px-6 py-2 bg-white text-amber-900 font-semibold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    <button 
+                      onClick={() => handleOrderClick(product.name)}
+                      className="px-6 py-2 bg-white text-amber-900 font-semibold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                    >
                       Quick View
                     </button>
                   </div>
@@ -158,7 +174,10 @@ export default function Home() {
                       </span>
                     )}
                     {product.price > 0 && (
-                      <button className="p-2 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors">
+                      <button 
+                        onClick={() => handleOrderClick(product.name)}
+                        className="p-2 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
@@ -290,6 +309,16 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Order Form Modal */}
+      <OrderForm
+        isOpen={isOrderFormOpen}
+        onClose={() => {
+          setIsOrderFormOpen(false);
+          setSelectedProduct('');
+        }}
+        selectedProduct={selectedProduct}
+      />
     </div>
   );
 }

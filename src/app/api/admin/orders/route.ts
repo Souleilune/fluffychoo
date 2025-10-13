@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', status);
     }
 
-    // Search by name, email, or contact
+    // Search by name, email, contact, or order reference
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,contact_number.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,contact_number.ilike.%${search}%,order_reference.ilike.%${search}%`);
     }
 
     // Pagination

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createToken, verifyPassword } from '@/lib/admin-auth';
 import { cookies } from 'next/headers';
 
@@ -18,28 +18,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find admin by email
-    const { data: admin, error } = await supabase
+    // Find admin by email - use array approach instead of .single()
+    const { data: adminData, error } = await supabaseAdmin
       .from('admins')
       .select('*')
-      .eq('email', email)
-      .single();
+      .eq('email', email);
 
     console.log('📊 Database query result:', {
-      found: !!admin,
+      found: !!adminData && adminData.length > 0,
       error: error?.message,
-      adminEmail: admin?.email,
-      hasPasswordHash: !!admin?.password_hash,
-      passwordHashLength: admin?.password_hash?.length
+      rowCount: adminData?.length,
+      firstAdminEmail: adminData?.[0]?.email,
+      hasPasswordHash: !!adminData?.[0]?.password_hash,
+      passwordHashLength: adminData?.[0]?.password_hash?.length
     });
 
-    if (error || !admin) {
-      console.log('❌ Admin not found in database');
+    if (error) {
+      console.log('❌ Database error:', error);
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
+
+    if (!adminData || adminData.length === 0) {
+      console.log('❌ No admin found with that email');
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    if (adminData.length > 1) {
+      console.log('⚠️  Multiple admins found! Using first one.');
+    }
+
+    const admin = adminData[0];
 
     // Verify password
     console.log('🔍 Verifying password...');
@@ -55,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last login
-    await supabase
+    await supabaseAdmin
       .from('admins')
       .update({ last_login: new Date().toISOString() })
       .eq('id', admin.id);

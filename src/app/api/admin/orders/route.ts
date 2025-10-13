@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET /api/admin/orders - Get all orders with filters
 export async function GET(request: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search');
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('orders')
       .select('*', { count: 'exact' });
 
@@ -78,7 +78,7 @@ export async function PATCH(request: NextRequest) {
     if (status) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .update(updateData)
       .eq('id', id)
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('orders')
       .delete()
       .eq('id', id);

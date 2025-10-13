@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { sendOrderConfirmationEmail } from '@/lib/email';
+import { generateOrderReference } from '@/lib/order-utils';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
     // Validate required fields
-    const { name, location, contactNumber, order, quantity } = body;
+    const { name, location, contactNumber, order, quantity, termsAccepted } = body;
     
     if (!name || !location || !contactNumber || !order || !quantity) {
       return NextResponse.json(
@@ -24,6 +25,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate terms acceptance
+    if (!termsAccepted) {
+      return NextResponse.json(
+        { error: 'You must accept the terms and conditions' },
+        { status: 400 }
+      );
+    }
+
+    // Generate unique order reference
+    const orderReference = generateOrderReference();
+
     // Insert order into Supabase using admin client (bypasses RLS)
     const { data, error } = await supabaseAdmin
       .from('orders')
@@ -36,6 +48,9 @@ export async function POST(request: NextRequest) {
           order,
           quantity,
           status: 'pending',
+          payment_proof_url: body.paymentProofUrl || null,
+          terms_accepted: termsAccepted,
+          order_reference: orderReference,
         },
       ])
       .select()
@@ -59,6 +74,7 @@ export async function POST(request: NextRequest) {
           quantity,
           location,
           contactNumber,
+          orderReference,
         });
         
         console.log('✅ Order confirmation email sent to:', body.email);

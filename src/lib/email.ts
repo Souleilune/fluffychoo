@@ -22,8 +22,9 @@ export function generateOrderConfirmationEmail(orderDetails: {
   quantity: number;
   location: string;
   contactNumber: string;
+  orderReference: string;
 }) {
-  const { name, email, order, quantity, location, contactNumber } = orderDetails;
+  const { name, email, order, quantity, location, contactNumber, orderReference } = orderDetails;
   
   return {
     from: {
@@ -55,73 +56,76 @@ export function generateOrderConfirmationEmail(orderDetails: {
               }
               .email-container { 
                 background-color: #2d2416 !important; 
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+                border-color: #4a3a1f !important;
               }
               .email-header { 
-                background: linear-gradient(to right, #4a3d28, #5c4d32) !important; 
+                background: linear-gradient(to right, #3d2f1a, #4a3a1f) !important; 
               }
-              .email-section { 
-                background-color: #3d3020 !important; 
-                border-color: #5c4d32 !important; 
-              }
-              .email-section-alt { 
-                background-color: #342b1c !important; 
-                border-color: #4a3d28 !important; 
-              }
-              .email-footer { 
-                background-color: #3d3020 !important; 
+              .email-section {
+                background-color: #3d2f1a !important;
+                border-color: #5a4a2f !important;
               }
               .text-primary { 
-                color: #fde68a !important; 
-              }
-              .text-secondary { 
                 color: #fef3c7 !important; 
               }
-              .text-tertiary { 
-                color: #fef9c3 !important; 
-              }
-              .badge { 
-                background: linear-gradient(to right, #5c4d32, #6b5a3a) !important; 
+              .text-secondary { 
                 color: #fde68a !important; 
               }
-              .border-color {
-                border-color: #4a3d28 !important;
+              .text-tertiary { 
+                color: #fcd34d !important; 
               }
+            }
+
+            /* Base styles */
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             }
           </style>
         </head>
-        <body class="email-body" style="margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #fffbeb;">
+        <body class="email-body" style="margin: 0; padding: 0; background-color: #fefce8;">
           <table role="presentation" style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" class="email-container" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+              <td style="padding: 40px 20px;">
+                <table class="email-container" role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #fde68a; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
                   
                   <!-- Header -->
                   <tr>
-                    <td class="email-header" style="padding: 40px 32px 24px; text-align: center; background: linear-gradient(to right, #fef9c3, #fde68a); border-radius: 12px 12px 0 0;">
-                      <h1 class="text-primary" style="margin: 0; color: #713f12; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; font-family: 'Poppins', sans-serif;">
-                        FluffyChoo
+                    <td class="email-header" style="background: linear-gradient(to right, #fffcdb, #fef3c7); padding: 32px 24px; text-align: center;">
+                      <h1 class="text-primary" style="margin: 0; color: #713f12; font-size: 28px; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                         FluffyChoo
                       </h1>
-                      <p class="text-tertiary" style="margin: 8px 0 0; color: #92400e; font-size: 14px; font-weight: 400; font-family: 'Poppins', sans-serif;">
-                        Comforting Softness in Every Bite
+                      <p class="text-secondary" style="margin: 8px 0 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                        Premium Mochi Brownies
                       </p>
                     </td>
                   </tr>
 
                   <!-- Main Content -->
                   <tr>
-                    <td style="padding: 32px;">
+                    <td style="padding: 32px 24px;">
                       
-                      <!-- Success Message -->
+                      <!-- Welcome Message -->
                       <div style="text-align: center; margin-bottom: 32px;">
-                        <div class="badge" style="display: inline-block; background: linear-gradient(to right, #fef9c3, #fde68a); width: 64px; height: 64px; line-height: 64px; border-radius: 50%; margin-bottom: 16px; font-size: 24px; font-weight: 600; color: #713f12; font-family: 'Poppins', sans-serif;">
-                          ✓
-                        </div>
-                        <h2 class="text-primary" style="margin: 0; color: #713f12; font-size: 22px; font-weight: 600; font-family: 'Poppins', sans-serif;">
-                          Order Confirmed!
+                        <h2 class="text-primary" style="margin: 0 0 8px; color: #713f12; font-size: 22px; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                          Order Confirmed! 
                         </h2>
                         <p class="text-secondary" style="margin: 8px 0 0; color: #78350f; font-size: 15px; font-family: 'Poppins', sans-serif;">
                           Thank you for your order, ${name}!
+                        </p>
+                      </div>
+
+                      <!-- Order Reference -->
+                      <div style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
+                        <p class="text-secondary" style="margin: 0 0 4px; color: #78350f; font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Order Reference
+                        </p>
+                        <p class="text-primary" style="margin: 0; color: #713f12; font-size: 24px; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 2px;">
+                          ${orderReference}
+                        </p>
+                        <p class="text-secondary" style="margin: 4px 0 0; color: #78350f; font-size: 11px; font-family: 'Poppins', sans-serif;">
+                          Save this for your records
                         </p>
                       </div>
 
@@ -168,23 +172,19 @@ export function generateOrderConfirmationEmail(orderDetails: {
                       </div>
 
                       <!-- What's Next -->
-                      <div class="email-section-alt" style="background-color: #fffbeb; border: 1px solid #fef9c3; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                      <div class="email-section" style="background-color: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
                         <h3 class="text-primary" style="margin: 0 0 12px; color: #713f12; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif;">
-                          What's Next?
+                          What's Next? 
                         </h3>
                         <p class="text-secondary" style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6; font-family: 'Poppins', sans-serif;">
-                          Our team will contact you shortly to confirm your order and arrange delivery details. 
-                          We bake everything fresh, so your FluffyChoo treats will be made with love just for you!
+                          Our team will contact you shortly to confirm your order and arrange delivery details. We bake everything fresh, so your FluffyChoo treats will be made with love just for you!
                         </p>
                       </div>
 
-                      <!-- Contact Info -->
-                      <div class="border-color" style="text-align: center; padding: 20px 0; border-top: 1px solid #fef9c3;">
-                        <p class="text-secondary" style="margin: 0 0 4px; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
-                          Questions? We're here to help!
-                        </p>
-                        <p class="text-primary" style="margin: 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
-                          Reply to this email or give us a call
+                      <!-- Call to Action -->
+                      <div style="text-align: center; margin-top: 24px;">
+                        <p class="text-secondary" style="margin: 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                          Questions? Reply to this email or give us a call.
                         </p>
                       </div>
 
@@ -193,8 +193,8 @@ export function generateOrderConfirmationEmail(orderDetails: {
 
                   <!-- Footer -->
                   <tr>
-                    <td class="email-footer" style="padding: 24px 32px; text-align: center; background-color: #fefce8; border-radius: 0 0 12px 12px;">
-                      <p class="text-secondary" style="margin: 0 0 4px; color: #78350f; font-size: 12px; font-family: 'Poppins', sans-serif;">
+                    <td style="background-color: #fef3c7; padding: 20px 24px; text-align: center; border-top: 1px solid #fde68a;">
+                      <p class="text-tertiary" style="margin: 0; color: #92400e; font-size: 12px; font-family: 'Poppins', sans-serif;">
                         © ${new Date().getFullYear()} FluffyChoo. All rights reserved.
                       </p>
                       <p class="text-tertiary" style="margin: 0; color: #92400e; font-size: 12px; font-family: 'Poppins', sans-serif;">
@@ -210,13 +210,13 @@ export function generateOrderConfirmationEmail(orderDetails: {
         </body>
       </html>
     `,
-        </body>
-      </html>
-    `,
     text: `
       Order Confirmation - FluffyChoo
       
       Thank you for your order, ${name}!
+      
+      ORDER REFERENCE: ${orderReference}
+      (Save this for your records)
       
       ORDER DETAILS:
       - Product: ${order}
@@ -243,6 +243,7 @@ export async function sendOrderConfirmationEmail(orderDetails: {
   quantity: number;
   location: string;
   contactNumber: string;
+  orderReference: string;
 }) {
   try {
     // Log configuration for debugging (without exposing the full password)

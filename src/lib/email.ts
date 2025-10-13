@@ -65,6 +65,9 @@ export function generateOrderConfirmationEmail(orderDetails: {
                 background-color: #3d2f1a !important;
                 border-color: #5a4a2f !important;
               }
+              .order-reference-box {
+                background: linear-gradient(to right, #4a3828, #5c4a35) !important;
+              }
               .text-primary { 
                 color: #fef3c7 !important; 
               }
@@ -117,7 +120,7 @@ export function generateOrderConfirmationEmail(orderDetails: {
                       </div>
 
                       <!-- Order Reference -->
-                      <div style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
+                      <div class="order-reference-box" style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
                         <p class="text-secondary" style="margin: 0 0 4px; color: #78350f; font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
                           Order Reference
                         </p>
@@ -322,7 +325,7 @@ export function generateAdminOrderNotification(orderDetails: {
       address: process.env.EMAIL_USER!,
     },
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER!,
-    subject: ` New Order: ${orderReference} - ${order}`,
+    subject: `New Order: ${orderReference} - ${order}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -337,6 +340,15 @@ export function generateAdminOrderNotification(orderDetails: {
               padding: 0;
               font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
               background-color: #fefce8;
+            }
+            /* Dark mode styles */
+            @media (prefers-color-scheme: dark) {
+              body {
+                background-color: #1a1410 !important;
+              }
+              .order-reference-box {
+                background: linear-gradient(to right, #4a3828, #5c4a35) !important;
+              }
             }
           </style>
         </head>
@@ -363,7 +375,7 @@ export function generateAdminOrderNotification(orderDetails: {
                     <td style="padding: 32px 24px;">
                       
                       <!-- Order Reference -->
-                      <div style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
+                      <div class="order-reference-box" style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
                         <p style="margin: 0 0 4px; color: #78350f; font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
                           Order Reference
                         </p>
@@ -448,7 +460,7 @@ export function generateAdminOrderNotification(orderDetails: {
                       <!-- Payment Proof -->
                       <div style="background-color: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
                         <h3 style="margin: 0 0 12px; color: #166534; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif;">
-                          ✅ Payment Proof Uploaded
+                          Payment Proof Uploaded
                         </h3>
                         <p style="margin: 0 0 12px; color: #15803d; font-size: 14px; font-family: 'Poppins', sans-serif;">
                           Customer has uploaded payment proof. View in admin panel.

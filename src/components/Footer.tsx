@@ -40,7 +40,7 @@ export default function Footer() {
 
           {/* Copyright */}
           <div className="text-center text-xs sm:text-sm text-[#683310] px-4">
-            <p>&copy; {currentYear} fluffy choy. All rights reserved.</p>
+            <p>&copy; {currentYear} fluffychoo. All rights reserved.</p>
           </div>
         </div>
       </div>

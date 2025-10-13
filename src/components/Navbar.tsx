@@ -1,55 +1,41 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="pt-1">
+    <nav className="">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-24 sm:h-28 md:h-32">
-          {/* Logo - Much Bigger */}
-          <Link href="/" className="flex items-center group z-50">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-36 lg:h-36 flex-shrink-0">
-              <Image 
-                src="/choologo.png" 
-                alt="Fluffy Choy Logo"
-                fill
-                className="object-contain group-hover:scale-110 transition-transform duration-300"
-                priority
-              />
-            </div>
-          </Link>
-
-          {/* Desktop Navigation Links */}
+        <div className="flex justify-center items-center h-16">
+          {/* Desktop Navigation Links - Centered */}
           <div className="hidden md:flex space-x-12">
             <Link 
               href="/" 
-              className="text-amber-600 hover:text-amber-700 font-medium text-base transition-colors"
+              className="text-[#DAA520] hover:text-[#B8860B] font-light text-base uppercase tracking-wide transition-colors"
             >
-              home
+              HOME
             </Link>
             <Link 
               href="/showcase" 
-              className="text-amber-600 hover:text-amber-700 font-medium text-base transition-colors"
+              className="text-[#DAA520] hover:text-[#B8860B] font-light text-base uppercase tracking-wide transition-colors"
             >
-              showcase
+              SHOWCASE
             </Link>
             <Link 
               href="/contact" 
-              className="text-amber-600 hover:text-amber-700 font-medium text-base transition-colors"
+              className="text-[#DAA520] hover:text-[#B8860B] font-light text-base uppercase tracking-wide transition-colors"
             >
-              contact
+              CONTACT
             </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden z-50 p-2 rounded-md text-amber-600 hover:text-amber-700 hover:bg-amber-100 transition-colors"
+            className="md:hidden z-50 p-2 rounded-md text-[#DAA520] hover:text-[#B8860B] hover:bg-amber-100 transition-colors"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
@@ -70,23 +56,23 @@ export default function Navbar() {
             <Link 
               href="/" 
               onClick={() => setIsMenuOpen(false)}
-              className="block text-amber-600 hover:text-amber-700 font-medium text-lg transition-colors py-2"
+              className="block text-[#DAA520] hover:text-[#B8860B] font-light text-lg uppercase tracking-wide transition-colors py-2"
             >
-              home
+              HOME
             </Link>
             <Link 
               href="/showcase" 
               onClick={() => setIsMenuOpen(false)}
-              className="block text-amber-600 hover:text-amber-700 font-medium text-lg transition-colors py-2"
+              className="block text-[#DAA520] hover:text-[#B8860B] font-light text-lg uppercase tracking-wide transition-colors py-2"
             >
-              showcase
+              SHOWCASE
             </Link>
             <Link 
               href="/contact" 
               onClick={() => setIsMenuOpen(false)}
-              className="block text-amber-600 hover:text-amber-700 font-medium text-lg transition-colors py-2"
+              className="block text-[#DAA520] hover:text-[#B8860B] font-light text-lg uppercase tracking-wide transition-colors py-2"
             >
-              contact
+              CONTACT
             </Link>
           </div>
         )}

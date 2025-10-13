@@ -11,7 +11,7 @@ export const products: Product[] = [
     id: 1,
     name: "Mochi Brownies Classic",
     price: 2.99,
-    image: "/products/choos.png",
+    image: "/products/classicchoos.png",
     description: "Classic brownies with fluffy feeling"
   },
   {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { sendOrderConfirmationEmail } from '@/lib/email';
+import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '@/lib/email';
 import { generateOrderReference } from '@/lib/order-utils';
 
 export async function POST(request: NextRequest) {
@@ -83,6 +83,26 @@ export async function POST(request: NextRequest) {
         console.error('⚠️ Failed to send confirmation email:', emailError);
         // Order is still successful, just email failed
       }
+    }
+
+    // Send admin notification (always send, even if customer email failed)
+    try {
+      await sendAdminOrderNotification({
+        name,
+        email: body.email || null,
+        order,
+        quantity,
+        location,
+        contactNumber,
+        orderReference,
+        paymentProofUrl: body.paymentProofUrl || null,
+      });
+      
+      console.log('✅ Admin notification sent');
+    } catch (emailError) {
+      // Log the error but don't fail the order
+      console.error('⚠️ Failed to send admin notification:', emailError);
+      // Order is still successful, just notification failed
     }
 
     return NextResponse.json(

@@ -302,3 +302,265 @@ export async function verifyEmailConfig() {
     return false;
   }
 }
+
+// Admin notification email template
+export function generateAdminOrderNotification(orderDetails: {
+  name: string;
+  email: string | null;
+  order: string;
+  quantity: number;
+  location: string;
+  contactNumber: string;
+  orderReference: string;
+  paymentProofUrl: string | null;
+}) {
+  const { name, email, order, quantity, location, contactNumber, orderReference, paymentProofUrl } = orderDetails;
+  
+  return {
+    from: {
+      name: 'FluffyChoo Orders',
+      address: process.env.EMAIL_USER!,
+    },
+    to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER!,
+    subject: ` New Order: ${orderReference} - ${order}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Order Notification</title>
+          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              background-color: #fefce8;
+            }
+          </style>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #fefce8;">
+          <table role="presentation" style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #fde68a; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(to right, #dc2626, #ea580c); padding: 32px 24px; text-align: center;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                         New Order Alert
+                      </h1>
+                      <p style="margin: 8px 0 0; color: #fef3c7; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                        A new order has been placed on FluffyChoo
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Main Content -->
+                  <tr>
+                    <td style="padding: 32px 24px;">
+                      
+                      <!-- Order Reference -->
+                      <div style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
+                        <p style="margin: 0 0 4px; color: #78350f; font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Order Reference
+                        </p>
+                        <p style="margin: 0; color: #713f12; font-size: 24px; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 2px;">
+                          ${orderReference}
+                        </p>
+                      </div>
+
+                      <!-- Customer Information -->
+                      <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px; color: #713f12; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                           Customer Information
+                        </h3>
+                        
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tr>
+                            <td style="padding: 6px 0; color: #78350f; font-size: 14px; width: 35%; font-family: 'Poppins', sans-serif;">
+                              <strong>Name</strong>
+                            </td>
+                            <td style="padding: 6px 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                              ${name}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                              <strong>Contact</strong>
+                            </td>
+                            <td style="padding: 6px 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                              ${contactNumber}
+                            </td>
+                          </tr>
+                          ${email ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                              <strong>Email</strong>
+                            </td>
+                            <td style="padding: 6px 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                              ${email}
+                            </td>
+                          </tr>
+                          ` : ''}
+                          <tr>
+                            <td style="padding: 6px 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                              <strong>Location</strong>
+                            </td>
+                            <td style="padding: 6px 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                              ${location}
+                            </td>
+                          </tr>
+                        </table>
+                      </div>
+
+                      <!-- Order Details -->
+                      <div style="background: linear-gradient(to br, #fef3c7, #fde68a); border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px; color: #713f12; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                           Order Details
+                        </h3>
+                        
+                        <div style="background-color: rgba(255, 255, 255, 0.6); border-radius: 6px; padding: 16px;">
+                          <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                              <td style="padding: 6px 0; color: #78350f; font-size: 14px; width: 35%; font-family: 'Poppins', sans-serif;">
+                                <strong>Product</strong>
+                              </td>
+                              <td style="padding: 6px 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                                ${order}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 6px 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                                <strong>Quantity</strong>
+                              </td>
+                              <td style="padding: 6px 0; color: #713f12; font-size: 14px; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                                ${quantity} pcs
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </div>
+
+                      ${paymentProofUrl ? `
+                      <!-- Payment Proof -->
+                      <div style="background-color: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 12px; color: #166534; font-size: 16px; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                          ✅ Payment Proof Uploaded
+                        </h3>
+                        <p style="margin: 0 0 12px; color: #15803d; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                          Customer has uploaded payment proof. View in admin panel.
+                        </p>
+                        <a href="${paymentProofUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; font-family: 'Poppins', sans-serif; font-size: 14px;">
+                          View Payment Proof
+                        </a>
+                      </div>
+                      ` : ''}
+
+                      <!-- Quick Actions -->
+                      <div style="text-align: center; margin-top: 32px;">
+                        <p style="margin: 0 0 16px; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
+                          Manage this order in your admin panel
+                        </p>
+                        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/orders" target="_blank" style="display: inline-block; padding: 12px 32px; background: linear-gradient(to right, #fef9c3, #fde68a); color: #713f12; text-decoration: none; border-radius: 12px; font-weight: 600; font-family: 'Poppins', sans-serif; font-size: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                          Go to Admin Panel
+                        </a>
+                      </div>
+
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #fef3c7; padding: 20px 24px; text-align: center; border-top: 1px solid #fde68a;">
+                      <p style="margin: 0; color: #92400e; font-size: 12px; font-family: 'Poppins', sans-serif;">
+                        This is an automated notification from FluffyChoo Order Management System
+                      </p>
+                      <p style="margin: 4px 0 0; color: #92400e; font-size: 12px; font-family: 'Poppins', sans-serif;">
+                        Order received at ${new Date().toLocaleString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `,
+    text: `
+      NEW ORDER NOTIFICATION - FluffyChoo
+      
+      Order Reference: ${orderReference}
+      
+      CUSTOMER INFORMATION:
+      - Name: ${name}
+      - Contact: ${contactNumber}
+      ${email ? `- Email: ${email}` : ''}
+      - Location: ${location}
+      
+      ORDER DETAILS:
+      - Product: ${order}
+      - Quantity: ${quantity}
+      
+      ${paymentProofUrl ? 'Payment Proof: Uploaded ✓' : 'Payment Proof: Not uploaded'}
+      ${paymentProofUrl ? `View: ${paymentProofUrl}` : ''}
+      
+      Manage this order in your admin panel:
+      ${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/orders
+      
+      Order received at ${new Date().toLocaleString()}
+    `,
+  };
+}
+
+// Send admin notification email
+export async function sendAdminOrderNotification(orderDetails: {
+  name: string;
+  email: string | null;
+  order: string;
+  quantity: number;
+  location: string;
+  contactNumber: string;
+  orderReference: string;
+  paymentProofUrl: string | null;
+}) {
+  try {
+    console.log('📧 Sending admin notification...');
+    console.log('- Admin Email:', process.env.ADMIN_EMAIL || process.env.EMAIL_USER);
+    console.log('- Order Reference:', orderDetails.orderReference);
+    
+    // Check if email is configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      console.warn('⚠️ Email not configured - skipping admin notification');
+      return { success: false, reason: 'Email not configured' };
+    }
+
+    const mailOptions = generateAdminOrderNotification(orderDetails);
+    
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ Admin notification sent successfully!');
+    console.log('- Message ID:', info.messageId);
+    
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending admin notification:');
+    
+    if (error instanceof Error) {
+      console.error('- Error message:', error.message);
+    }
+    
+    // Don't throw - we don't want to fail the order if notification fails
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

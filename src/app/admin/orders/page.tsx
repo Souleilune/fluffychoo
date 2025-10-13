@@ -224,14 +224,16 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => openEditModal(order)}
-                            className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                            className="p-2 text-amber-900 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteOrder(order.id)}
-                            className="p-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                            className="p-2 text-amber-900 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -313,13 +315,14 @@ export default function AdminOrdersPage() {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2.5 border border-amber-200 text-amber-900 font-semibold rounded-full hover:bg-amber-50 transition-all duration-300"
+                  className="px-6 py-2.5 border border-amber-200 text-amber-900 font-semibold rounded-xl hover:bg-amber-50 transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdateOrder}
-                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-2"
+                  className="px-6 py-2.5 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-2"
+                  style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                 >
                   <Save className="w-4 h-4" />
                   <span>Save Changes</span>

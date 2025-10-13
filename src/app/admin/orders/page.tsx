@@ -166,21 +166,21 @@ export default function AdminOrdersPage() {
         <div className="bg-white rounded-xl shadow-sm border border-amber-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-amber-50">
+              <thead className="bg-amber-50 border-b border-amber-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase">
-                    Order Details
+                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">
+                    Order
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-amber-900 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -196,22 +196,24 @@ export default function AdminOrdersPage() {
                   </tr>
                 ) : orders.length > 0 ? (
                   orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-amber-50/50">
+                    <tr key={order.id} className="hover:bg-amber-50">
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-amber-900">{order.name}</div>
-                        <div className="text-sm text-amber-600">{order.contact_number}</div>
-                        <div className="text-xs text-amber-500">{order.location}</div>
+                        <div>
+                          <div className="font-medium text-amber-900">{order.name}</div>
+                          <div className="text-sm text-amber-600">{order.contact_number}</div>
+                          {order.email && (
+                            <div className="text-sm text-amber-600">{order.email}</div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-amber-800">{order.order}</div>
-                        <div className="text-xs text-amber-600">Qty: {order.quantity}</div>
+                        <div>
+                          <div className="font-medium text-amber-900">{order.order}</div>
+                          <div className="text-sm text-amber-600">Qty: {order.quantity}</div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                            order.status
-                          )}`}
-                        >
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                           {order.status}
                         </span>
                       </td>
@@ -222,14 +224,14 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => openEditModal(order)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                            className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteOrder(order.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                            className="p-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -311,13 +313,13 @@ export default function AdminOrdersPage() {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-amber-200 text-amber-900 rounded-lg hover:bg-amber-50"
+                  className="px-6 py-2.5 border border-amber-200 text-amber-900 font-semibold rounded-full hover:bg-amber-50 transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdateOrder}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg flex items-center space-x-2"
+                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-2"
                 >
                   <Save className="w-4 h-4" />
                   <span>Save Changes</span>

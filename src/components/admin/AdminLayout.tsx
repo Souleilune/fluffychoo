@@ -88,15 +88,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
                     isActive
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                      ? 'text-amber-900 shadow-lg transform scale-[1.02]'
                       : 'text-amber-700 hover:bg-amber-50'
                   }`}
+                  style={isActive ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } : {}}
                   onClick={() => setIsSidebarOpen(false)}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
@@ -107,10 +108,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex items-center space-x-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center justify-center space-x-3 px-4 py-3 w-full text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">
+              <span>
                 {isLoggingOut ? 'Logging out...' : 'Logout'}
               </span>
             </button>

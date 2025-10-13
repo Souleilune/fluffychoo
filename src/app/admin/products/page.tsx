@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Plus, Edit, Trash2, X, Save, Package, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, Package, Upload } from 'lucide-react';
 import Image from 'next/image';
 
 interface Product {
@@ -87,14 +87,12 @@ export default function AdminProductsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       alert('Please select a valid image file (JPEG, PNG, or WebP)');
       return;
     }
 
-    // Validate file size (5MB)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       alert('File size must be less than 5MB');
@@ -103,7 +101,6 @@ export default function AdminProductsPage() {
 
     setSelectedFile(file);
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -144,12 +141,10 @@ export default function AdminProductsPage() {
     e.preventDefault();
 
     try {
-      // Upload image if file is selected
       let imageUrl = formData.image;
       if (selectedFile) {
         imageUrl = await uploadImage() || '';
         if (!imageUrl && selectedFile) {
-          // Upload failed
           return;
         }
       }
@@ -163,14 +158,12 @@ export default function AdminProductsPage() {
 
       let response;
       if (editingProduct) {
-        // Update existing product
         response = await fetch('/api/admin/products', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: editingProduct.id, ...payload }),
         });
       } else {
-        // Create new product
         response = await fetch('/api/admin/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -217,7 +210,8 @@ export default function AdminProductsPage() {
           </div>
           <button
             onClick={openCreateModal}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg"
+            className="flex items-center space-x-2 px-6 py-2.5 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
           >
             <Plus className="w-5 h-5" />
             <span>Add Product</span>
@@ -248,46 +242,41 @@ export default function AdminProductsPage() {
                   ) : (
                     <Package className="w-16 h-16 text-amber-300" />
                   )}
-                  {!product.is_active && (
-                    <div className="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded">
-                      Inactive
-                    </div>
-                  )}
                 </div>
 
                 {/* Product Info */}
-                <div className="p-4 space-y-3">
-                  <div>
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-amber-900">{product.name}</h3>
-                    <p className="text-sm text-amber-600 mt-1 line-clamp-2">
-                      {product.description || 'No description'}
-                    </p>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {product.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  {product.description && (
+                    <p className="text-sm text-amber-600 mb-3 line-clamp-2">{product.description}</p>
+                  )}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-2xl font-bold text-amber-900">${product.price.toFixed(2)}</span>
+                    <span className="text-sm text-amber-600">Stock: {product.stock}</span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-2xl font-bold text-amber-900">
-                        ${product.price.toFixed(2)}
-                      </span>
-                      <div className="text-xs text-amber-600">Stock: {product.stock}</div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex space-x-2 pt-3 border-t border-amber-100">
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
                     <button
                       onClick={() => openEditModal(product)}
-                      className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center justify-center space-x-2"
+                      className="flex-1 px-4 py-2 text-amber-900 font-semibold rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2"
+                      style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                     >
                       <Edit className="w-4 h-4" />
                       <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleDelete(product.id)}
-                      className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 flex items-center justify-center space-x-2"
+                      className="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300"
                     >
                       <Trash2 className="w-4 h-4" />
-                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
@@ -295,7 +284,7 @@ export default function AdminProductsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-xl border border-amber-100">
             <Package className="w-16 h-16 text-amber-300 mx-auto mb-4" />
             <p className="text-amber-600">No products yet. Create your first product!</p>
           </div>
@@ -308,7 +297,7 @@ export default function AdminProductsPage() {
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-amber-100 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-amber-900">
-                {editingProduct ? 'Edit Product' : 'Create Product'}
+                {editingProduct ? 'Edit Product' : 'Create New Product'}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -319,7 +308,7 @@ export default function AdminProductsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Name */}
+              {/* Product Name */}
               <div>
                 <label className="block text-sm font-medium text-amber-900 mb-2">
                   Product Name *
@@ -330,14 +319,14 @@ export default function AdminProductsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                  placeholder="e.g., Mochi Brownies Classic"
+                  placeholder="fluffychoo"
                 />
               </div>
 
               {/* Price */}
               <div>
                 <label className="block text-sm font-medium text-amber-900 mb-2">
-                  Price *
+                  Price ($) *
                 </label>
                 <input
                   type="number"
@@ -371,7 +360,6 @@ export default function AdminProductsPage() {
                   Product Image
                 </label>
                 
-                {/* Image Preview */}
                 {imagePreview && (
                   <div className="mb-4 relative w-full h-48 bg-amber-50 rounded-lg overflow-hidden border-2 border-amber-200">
                     <Image
@@ -394,7 +382,6 @@ export default function AdminProductsPage() {
                   </div>
                 )}
 
-                {/* File Input */}
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-amber-300 border-dashed rounded-lg cursor-pointer bg-amber-50 hover:bg-amber-100 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -413,7 +400,6 @@ export default function AdminProductsPage() {
                   </label>
                 </div>
 
-                {/* Or use URL */}
                 <div className="mt-4">
                   <p className="text-xs text-amber-600 mb-2">Or paste an image URL:</p>
                   <input
@@ -467,18 +453,19 @@ export default function AdminProductsPage() {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   disabled={isUploading}
-                  className="px-6 py-2 border border-amber-200 text-amber-900 rounded-lg hover:bg-amber-50 disabled:opacity-50"
+                  className="px-6 py-2.5 border border-amber-200 text-amber-900 font-semibold rounded-xl hover:bg-amber-50 transition-all duration-300 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                 >
                   {isUploading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-900"></div>
                       <span>Uploading...</span>
                     </>
                   ) : (

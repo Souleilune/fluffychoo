@@ -261,11 +261,11 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl transform transition-all">
-          <div className="rounded-t-3xl p-6" style={{ background: 'linear-gradient(to right, #fffcdb, #fef3c7)' }}>
+          <div className="rounded-t-3xl p-4 sm:p-6" style={{ background: 'linear-gradient(to right, #fffcdb, #fef3c7)' }}>
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <ShoppingBag className="w-6 h-6 text-amber-900" />
-                <h2 className="text-2xl font-bold text-amber-900">Place Your Order</h2>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-amber-900" />
+                <h2 className="text-xl sm:text-2xl font-bold text-amber-900">Place Your Order</h2>
               </div>
               <button
                 onClick={handleClose}
@@ -281,20 +281,20 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                 <div key={step} className="flex items-center">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base font-semibold transition-all ${
                         currentStep >= step
                           ? 'bg-amber-900 text-white'
                           : 'bg-white text-amber-900 border-2 border-amber-900/30'
                       }`}
                     >
-                      {currentStep > step ? <CheckCircle className="w-5 h-5" /> : step}
+                      {currentStep > step ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" /> : step}
                     </div>
-                    <span className="text-xs mt-2 text-amber-900 font-medium">
+                    <span className="text-[10px] sm:text-xs mt-1 sm:mt-2 text-amber-900 font-medium">
                       {step === 1 ? 'Info' : step === 2 ? 'Order' : step === 3 ? 'Payment' : 'Review'}
                     </span>
                   </div>
                   {index < 3 && (
-                    <div className={`w-12 h-0.5 mb-6 transition-colors ${
+                    <div className={`w-8 sm:w-12 h-0.5 mb-4 sm:mb-6 transition-colors ${
                       currentStep > step ? 'bg-amber-900' : 'bg-amber-900/30'
                     }`} />
                   )}
@@ -303,10 +303,10 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="p-4 sm:p-6 md:p-8">
             {currentStep === 1 && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-amber-900 mb-4">Your Information</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Your Information</h3>
                 
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-amber-900 mb-1">
@@ -375,7 +375,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
             {currentStep === 2 && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-amber-900 mb-4">Review Your Order</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Review Your Order</h3>
                 
                 {isLoadingProducts ? (
                   <div className="flex flex-col items-center justify-center py-8">
@@ -472,12 +472,12 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
             {currentStep === 3 && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-amber-900 mb-4">Payment</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Payment</h3>
                 
-                <div className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl text-center">
+                <div className="p-4 sm:p-6 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl text-center">
                   <h4 className="font-semibold text-amber-900 mb-3">Scan to Pay</h4>
-                  <div className="inline-block bg-white p-4 rounded-lg shadow-md">
-                    <div className="relative w-64 h-64 mx-auto">
+                  <div className="inline-block bg-white p-3 sm:p-4 rounded-lg shadow-md max-w-full">
+                    <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 mx-auto">
                       <Image
                         src="/qr-payment.png"
                         alt="Payment QR Code"
@@ -540,7 +540,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
             {currentStep === 4 && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-amber-900 mb-4">Review & Confirm</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Review & Confirm</h3>
                 
                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-3">
                   <div>
@@ -618,11 +618,11 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               </div>
             )}
 
-            <div className="flex justify-between mt-8 pt-6 border-t border-amber-200">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 sm:mt-8 pt-6 border-t border-amber-200">
               {currentStep > 1 && !submitStatus.type && (
                 <button
                   onClick={handleBack}
-                  className="flex items-center space-x-2 px-6 py-2.5 text-amber-900 font-semibold rounded-xl border-2 border-amber-200 hover:bg-amber-50 transition-all"
+                  className="flex items-center justify-center space-x-2 px-6 py-2.5 text-amber-900 font-semibold rounded-xl border-2 border-amber-200 hover:bg-amber-50 transition-all"
                 >
                   <ChevronLeft className="w-5 h-5" />
                   <span>Back</span>
@@ -633,7 +633,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                 <button
                   onClick={handleNext}
                   disabled={!validateStep(currentStep)}
-                  className="ml-auto flex items-center space-x-2 px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed transition-all"
+                  className="ml-auto flex items-center justify-center space-x-2 px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed transition-all"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-5 h-5" />
@@ -642,7 +642,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                 <button
                   onClick={handleSubmit}
                   disabled={!termsAccepted || isSubmitting || isUploading}
-                  className="ml-auto flex items-center space-x-2 px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
+                  className="ml-auto flex items-center justify-center space-x-2 px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
                 >
                   {isSubmitting ? (
                     <>
@@ -659,7 +659,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               ) : submitStatus.type === 'success' ? (
                 <button
                   onClick={handleClose}
-                  className="ml-auto flex items-center space-x-2 px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 transition-all"
+                  className="ml-auto flex items-center justify-center space-x-2 px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 transition-all"
                 >
                   <span>Close</span>
                 </button>

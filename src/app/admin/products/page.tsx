@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Plus, Edit, Trash2, X, Save, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, Package, Upload, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 
 interface Product {
@@ -22,6 +22,9 @@ export default function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -52,6 +55,8 @@ export default function AdminProductsPage() {
 
   const openCreateModal = () => {
     setEditingProduct(null);
+    setSelectedFile(null);
+    setImagePreview(null);
     setFormData({
       name: '',
       price: '',
@@ -65,6 +70,8 @@ export default function AdminProductsPage() {
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
+    setSelectedFile(null);
+    setImagePreview(product.image);
     setFormData({
       name: product.name,
       price: product.price.toString(),
@@ -76,12 +83,80 @@ export default function AdminProductsPage() {
     setIsModalOpen(true);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please select a valid image file (JPEG, PNG, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!selectedFile) return formData.image || null;
+
+    setIsUploading(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', selectedFile);
+
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to upload image');
+      }
+
+      return data.url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to upload image');
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      // Upload image if file is selected
+      let imageUrl = formData.image;
+      if (selectedFile) {
+        imageUrl = await uploadImage() || '';
+        if (!imageUrl && selectedFile) {
+          // Upload failed
+          return;
+        }
+      }
+
       const payload = {
         ...formData,
+        image: imageUrl,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
       };
@@ -106,9 +181,12 @@ export default function AdminProductsPage() {
       if (response.ok) {
         await fetchProducts();
         setIsModalOpen(false);
+        setSelectedFile(null);
+        setImagePreview(null);
       }
     } catch (error) {
       console.error('Failed to save product:', error);
+      alert('Failed to save product');
     }
   };
 
@@ -287,18 +365,71 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-amber-900 mb-2">
-                  Image URL
+                  Product Image
                 </label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                  placeholder="https://example.com/image.jpg"
-                />
+                
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mb-4 relative w-full h-48 bg-amber-50 rounded-lg overflow-hidden border-2 border-amber-200">
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setSelectedFile(null);
+                        setFormData({ ...formData, image: '' });
+                      }}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* File Input */}
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-amber-300 border-dashed rounded-lg cursor-pointer bg-amber-50 hover:bg-amber-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-10 h-10 mb-3 text-amber-500" />
+                      <p className="mb-2 text-sm text-amber-700">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-amber-600">PNG, JPG, or WebP (MAX. 5MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+
+                {/* Or use URL */}
+                <div className="mt-4">
+                  <p className="text-xs text-amber-600 mb-2">Or paste an image URL:</p>
+                  <input
+                    type="url"
+                    value={formData.image}
+                    onChange={(e) => {
+                      setFormData({ ...formData, image: e.target.value });
+                      if (e.target.value) {
+                        setImagePreview(e.target.value);
+                        setSelectedFile(null);
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
               </div>
 
               {/* Stock */}
@@ -335,16 +466,27 @@ export default function AdminProductsPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2 border border-amber-200 text-amber-900 rounded-lg hover:bg-amber-50"
+                  disabled={isUploading}
+                  className="px-6 py-2 border border-amber-200 text-amber-900 rounded-lg hover:bg-amber-50 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg flex items-center space-x-2"
+                  disabled={isUploading}
+                  className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>{editingProduct ? 'Update' : 'Create'} Product</span>
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>{editingProduct ? 'Update' : 'Create'} Product</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

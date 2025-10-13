@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert order into Supabase
-    const { data, error } = await supabase
+    // Insert order into Supabase using admin client (bypasses RLS)
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .insert([
         {
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
           contact_number: contactNumber,
           order,
           quantity,
+          status: 'pending', // Set default status
         },
       ])
       .select()
@@ -54,42 +55,6 @@ export async function POST(request: NextRequest) {
         data,
       },
       { status: 201 }
-    );
-  } catch (error) {
-    console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// Optional: GET endpoint to retrieve orders (for admin use)
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
-    
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch orders' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        data,
-      },
-      { status: 200 }
     );
   } catch (error) {
     console.error('API error:', error);

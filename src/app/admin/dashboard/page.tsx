@@ -70,7 +70,7 @@ export default function AdminDashboard() {
     },
     {
       title: 'Total Revenue',
-      value: `$${stats?.revenue.total || '0.00'}`,
+      value: `${stats?.revenue.total || '0.00'}`,
       icon: DollarSign,
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',

@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="block w-full pl-10 pr-3 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white text-amber-900 placeholder-amber-400"
-                  placeholder="admin@fluffychoo.com"
+                  placeholder="admin"
                   disabled={isLoading}
                 />
               </div>
@@ -135,16 +135,7 @@ export default function AdminLoginPage() {
           </form>
 
           {/* Default Credentials Info */}
-          <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <p className="text-xs text-amber-800">
-              <strong>Default credentials:</strong><br />
-              Email: admin@fluffychoo.com<br />
-              Password: admin123
-            </p>
-            <p className="text-xs text-amber-600 mt-2">
-              ⚠️ Change these credentials in production!
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>

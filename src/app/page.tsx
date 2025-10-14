@@ -300,6 +300,7 @@ export default function Home() {
                 <li><Link href="#products" className="hover:text-white transition-colors">Products</Link></li>
                 <li><Link href="#about" className="hover:text-white transition-colors">About Us</Link></li>
                 <li><Link href="#contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="admin/login" className="hover:text-white transition-colors">Fluffychoo</Link></li>
               </ul>
             </div>
 

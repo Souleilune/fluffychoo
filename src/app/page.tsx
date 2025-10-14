@@ -57,7 +57,7 @@ export default function Home() {
               <div className="relative w-10 h-10 sm:w-22 sm:h-22 transform group-hover:scale-110 transition-transform duration-300">
                 <Image
                   src="/choologo.png"
-                  alt="fluffy choy logo"
+                  alt="fluffychoo logo"
                   fill
                   className="object-contain"
                   priority
@@ -230,7 +230,7 @@ export default function Home() {
                 Handcrafted with Love
               </h2>
               <p className="text-lg text-amber-800/80 leading-relaxed">
-                At fluffy choy, we believe in the power of comfort food. Each mochi brownie is carefully crafted using premium ingredients and traditional techniques, creating the perfect balance of chewy and fudgy textures that melts in your mouth.
+                At fluffycoo, we believe in the power of comfort food. Each mochi brownie is carefully crafted using premium ingredients and traditional techniques, creating the perfect balance of chewy and fudgy textures that melts in your mouth.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
@@ -286,7 +286,7 @@ export default function Home() {
                 <div className="relative w-10 h-10">
                   <Image
                     src="/logo.svg"
-                    alt="fluffy choy logo"
+                    alt="fluffychoo logo"
                     fill
                     className="object-contain"
                   />
@@ -311,7 +311,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold mb-4">Get in Touch</h3>
               <p className="text-amber-200 text-sm mb-2">
-                example@fluffychoo.com
+                fluffyfluffychoo@gmail.com
               </p>
               <p className="text-amber-200 text-sm">
                 Follow us for daily updates

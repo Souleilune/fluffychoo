@@ -9,7 +9,6 @@ async function test() {
   console.log('\nRun this SQL in Supabase:');
   console.log(`UPDATE admins SET password_hash = '${hash}' WHERE email = 'admin@fluffychoo.com';`);
   
-  // Test the hash
   const isValid = await bcrypt.compare(password, hash);
   console.log('\nHash validation test:', isValid ? '✅ PASS' : '❌ FAIL');
 }

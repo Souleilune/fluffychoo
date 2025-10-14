@@ -79,7 +79,8 @@ export default function Home() {
 
             <button 
               onClick={() => handleOrderClick()}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+              style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
             >
               Order Now
             </button>
@@ -97,7 +98,8 @@ export default function Home() {
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               <span className="block text-amber-900">Comforting Softness</span>
-              <span className="block bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-amber-200 via-amber-600 to-amber-300 bg-clip-text text-transparent">
+                
                 in Every Bite
               </span>
             </h1>
@@ -107,10 +109,11 @@ export default function Home() {
               You deserve softness.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 ">
               <Link 
                 href="#products"
-                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-base font-semibold rounded-full hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 text-base font-semibold rounded-full border-2 border-amber-500 hover:shadow-xl transform hover:scale-105 transition-all duration-300 "
+                style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
               >
                 Explore Flavors
               </Link>
@@ -201,7 +204,8 @@ export default function Home() {
                           </span>
                           <button
                             onClick={() => handleOrderClick(product.name)}
-                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 text-sm font-semibold rounded-full border-2 border-amber-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                           >
                             Order Now
                           </button>

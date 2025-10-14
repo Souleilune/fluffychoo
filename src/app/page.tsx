@@ -230,7 +230,7 @@ export default function Home() {
                 Handcrafted with Love
               </h2>
               <p className="text-lg text-amber-800/80 leading-relaxed">
-                At fluffycoo, we believe in the power of comfort food. Each mochi brownie is carefully crafted using premium ingredients and traditional techniques, creating the perfect balance of chewy and fudgy textures that melts in your mouth.
+                At fluffychoo, we believe in the power of comfort food. Each mochi brownie is carefully crafted using premium ingredients and traditional techniques, creating the perfect balance of chewy and fudgy textures that melts in your mouth.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-white rounded-2xl shadow-sm">

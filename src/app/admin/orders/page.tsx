@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Search, Filter, Trash2, Edit, X, Save, ExternalLink, FileText, MapPin, Phone, Mail, Package, Calendar, Eye } from 'lucide-react';
 import Image from 'next/image';
@@ -32,28 +32,28 @@ export default function AdminOrdersPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Partial<Order>>({});
 
-  useEffect(() => {
-    fetchOrders();
-  }, [statusFilter, searchQuery]);
+  const fetchOrders = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    const params = new URLSearchParams();
+    if (statusFilter !== 'all') params.append('status', statusFilter);
+    if (searchQuery) params.append('search', searchQuery);
 
-  const fetchOrders = async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (searchQuery) params.append('search', searchQuery);
-
-      const response = await fetch(`/api/admin/orders?${params}`);
-      const data = await response.json();
-      if (data.success) {
-        setOrders(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-    } finally {
-      setIsLoading(false);
+    const response = await fetch(`/api/admin/orders?${params}`);
+    const data = await response.json();
+    if (data.success) {
+      setOrders(data.data);
     }
-  };
+  } catch (error) {
+    console.error('Failed to fetch orders:', error);
+  } finally {
+    setIsLoading(false);
+  }
+}, [statusFilter, searchQuery]);
+
+useEffect(() => {
+  fetchOrders();
+}, [fetchOrders]);
 
   const handleUpdateOrder = async () => {
     if (!editingOrder.id) return;

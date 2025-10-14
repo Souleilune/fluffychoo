@@ -44,7 +44,7 @@ export async function GET() {
       .from('orders')
       .select('status');
 
-    const statusCounts = ordersByStatus?.reduce((acc: any, order) => {
+    const statusCounts = ordersByStatus?.reduce((acc: { [key: string]: number }, order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {});

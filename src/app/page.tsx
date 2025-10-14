@@ -135,7 +135,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-4">
-              This Week's Collection
+              This Week Collection
             </h2>
             <p className="text-lg text-amber-700/80 max-w-2xl mx-auto">
               Each piece crafted with premium ingredients and baked to perfection

@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react';
 import { ShoppingBag, Package, DollarSign, Clock, TrendingUp, CheckCircle2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 
+interface Orders {
+  id: string;
+  name: string;
+  order: string;
+  quantity: number;
+  status: string;
+  created_at: string;
+  contact_number: string;
+}
+
 interface Stats {
   orders: {
     total: number;
@@ -18,8 +28,10 @@ interface Stats {
   revenue: {
     total: string;
   };
-  recentOrders: any[];
+  recentOrders: Orders[];
 }
+
+
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -94,7 +106,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-amber-900">Dashboard</h1>
-          <p className="text-amber-700 mt-1">Welcome back! Here's what's happening today.</p>
+          <p className="text-amber-700 mt-1">Welcome back! Here&apos;s what&apos;s happening with your store.</p>
         </div>
 
         {/* Stats Grid */}

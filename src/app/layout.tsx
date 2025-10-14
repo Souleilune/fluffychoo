@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   description: "Indulge in premium mochi brownies, handcrafted daily with love at fluffychoo. The perfect fusion of chewy Japanese mochi and rich, fudgy brownies baked to golden perfection.",
   keywords: "mochi brownies, premium brownies, Japanese mochi, artisan brownies, handcrafted desserts, golden brownies, fluffychoo",
   authors: [{ name: "fluffychoo" }],
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
   openGraph: {
     title: "fluffychoo | Premium Mochi Brownies",
     description: "Premium comfort in every bite. Handcrafted mochi brownies baked fresh daily at fluffychoo.",

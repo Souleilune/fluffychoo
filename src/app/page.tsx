@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, ChefHat, Cookie, Loader2, Package } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 
 interface Product {
@@ -93,20 +93,20 @@ export default function Home() {
           <div className="text-center space-y-6 sm:space-y-8">
             <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-amber-200 shadow-sm">
               <Sparkles className="w-4 h-4 text-amber-500 mr-2" />
-              <span className="text-amber-700 text-sm font-medium">Freshly baked with love and fluff</span>
+              <span className="text-amber-700 text-sm font-medium">Welcome to fluffychoo!</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              <span className="block text-amber-900">Comforting Softness</span>
+              <span className="block text-amber-900">Serving Soft Treats</span>
               <span className="block bg-gradient-to-r from-amber-200 via-amber-600 to-amber-300 bg-clip-text text-transparent">
                 
-                in Every Bite
+                on Weekends
               </span>
             </h1>
 
             <p className="max-w-2xl mx-auto text-lg sm:text-xl text-amber-800/80 leading-relaxed">
-              A cozy bite of chewy mochi brownie, baked fresh to warm your day.    
-              You deserve softness.
+              All products are homemade in small batches    
+              (because good things take time).
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 ">
@@ -115,7 +115,7 @@ export default function Home() {
                 className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 text-base font-semibold rounded-full border-2 border-amber-500 hover:shadow-xl transform hover:scale-105 transition-all duration-300 "
                 style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
               >
-                Explore Flavors
+                Browse Desserts
               </Link>
               <Link 
                 href="#about"
@@ -135,7 +135,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-4">
-              This Week Collection
+              Our Desserts
             </h2>
             <p className="text-lg text-amber-700/80 max-w-2xl mx-auto">
               Each piece crafted with premium ingredients and baked to perfection
@@ -177,15 +177,6 @@ export default function Home() {
                         <Package className="w-20 h-20 text-amber-300" />
                       </div>
                     )}
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
-                      <button 
-                        onClick={() => handleOrderClick(product.name)}
-                        className="px-6 py-2 bg-white text-amber-900 font-semibold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
-                      >
-                        Quick View
-                      </button>
-                    </div>
                   </div>
 
                   <div className="p-6">
@@ -230,17 +221,16 @@ export default function Home() {
                 Handcrafted with Love
               </h2>
               <p className="text-lg text-amber-800/80 leading-relaxed">
-                At fluffychoo, we believe in the power of comfort food. Each mochi brownie is carefully crafted using premium ingredients and traditional techniques, creating the perfect balance of chewy and fudgy textures that melts in your mouth.
+                We&apos;re a tiny weekend bakeshop making desserts that feel like a hug - gentle, cozy, and just sweet enough.
+                Because honestly?
+                The world is a bit tough so your desserts shouldn&apos;t be.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
                   <Wheat className="w-8 h-8 text-amber-600 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-amber-900">Premium Ingredients</p>
                 </div>
-                <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
-                  <ChefHat className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-amber-900">Expert Bakers</p>
-                </div>
+                
                 <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
                   <Cookie className="w-8 h-8 text-amber-600 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-amber-900">Fresh Daily</p>
@@ -266,7 +256,7 @@ export default function Home() {
               Ready to Experience Fluffy Comfort?
             </h2>
             <p className="text-black-50 text-lg mb-8 max-w-2xl mx-auto">
-              Order now and experience the perfect blend of chewy mochi and rich brownie goodness
+              Order now and experience the perfect blend of soft chewy mochi and rich brownie goodness
             </p>
             <Link 
               href="#products"
@@ -294,7 +284,7 @@ export default function Home() {
                 <span className="text-xl font-semibold">fluffychoo</span>
               </div>
               <p className="text-amber-200 text-sm">
-                Premium mochi brownies, baked fresh daily with love and care.
+                You deserve softness.
               </p>
             </div>
 
@@ -312,6 +302,15 @@ export default function Home() {
               <h3 className="font-semibold mb-4">Get in Touch</h3>
               <p className="text-amber-200 text-sm mb-2">
                 fluffyfluffychoo@gmail.com
+              </p>
+              <p className="text-amber-200 text-sm mb-2">
+                facebook: fluffychoo.co
+              </p>
+              <p className="text-amber-200 text-sm mb-2">
+                instagram: fluffychoo.co
+              </p>
+              <p className="text-amber-200 text-sm mb-2">
+                tiktok: fluffychoo.co
               </p>
               <p className="text-amber-200 text-sm">
                 Follow us for daily updates

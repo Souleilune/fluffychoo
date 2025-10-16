@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Plus, Edit, Trash2, X, Save, Package, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, Package, Upload, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 
 interface Product {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
   description: string | null;
   image: string | null;
   stock: number;
   is_active: boolean;
+  display_order?: number;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,8 @@ export default function AdminProductsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -74,7 +77,7 @@ export default function AdminProductsPage() {
     setImagePreview(product.image);
     setFormData({
       name: product.name,
-      price: product.price.toString(),
+      price: product.price?.toString() || '',
       description: product.description || '',
       image: product.image || '',
       stock: product.stock.toString(),
@@ -140,21 +143,34 @@ export default function AdminProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (!formData.name || formData.name.trim() === '') {
+      alert('Product name is required');
+      return;
+    }
+
+    console.log('Form data before processing:', formData);
+
     try {
       let imageUrl = formData.image;
       if (selectedFile) {
         imageUrl = await uploadImage() || '';
         if (!imageUrl && selectedFile) {
-          return;
+          return; // Upload failed
         }
       }
 
+      // Create a clean payload with proper validation
       const payload = {
-        ...formData,
-        image: imageUrl,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
+        name: formData.name.trim(),
+        price: formData.price.trim() !== '' ? formData.price.trim() : '',
+        description: formData.description.trim() !== '' ? formData.description.trim() : '',
+        image: imageUrl ? imageUrl.trim() : '',
+        stock: formData.stock || '0',
+        is_active: formData.is_active,
       };
+
+      console.log('Payload being sent:', payload);
 
       let response;
       if (editingProduct) {
@@ -171,15 +187,20 @@ export default function AdminProductsPage() {
         });
       }
 
-      if (response.ok) {
+      const result = await response.json();
+      console.log('API Response:', result);
+
+      if (response.ok && result.success) {
         await fetchProducts();
         setIsModalOpen(false);
         setSelectedFile(null);
         setImagePreview(null);
+      } else {
+        alert(`Failed to save product: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to save product:', error);
-      alert('Failed to save product');
+      alert(`Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -199,6 +220,55 @@ export default function AdminProductsPage() {
     }
   };
 
+  // Reordering functions
+  const moveProduct = async (fromIndex: number, toIndex: number) => {
+    const reorderedProducts = [...products];
+    const [movedProduct] = reorderedProducts.splice(fromIndex, 1);
+    reorderedProducts.splice(toIndex, 0, movedProduct);
+
+    // Update local state immediately for better UX
+    setProducts(reorderedProducts);
+
+    // Send reorder request to API
+    try {
+      const productIds = reorderedProducts.map(product => product.id);
+      const response = await fetch('/api/admin/products/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds }),
+      });
+
+      if (!response.ok) {
+        // Revert on failure
+        await fetchProducts();
+        alert('Failed to reorder products');
+      }
+    } catch (error) {
+      console.error('Failed to reorder products:', error);
+      await fetchProducts();
+      alert('Failed to reorder products');
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      moveProduct(draggedIndex, dropIndex);
+    }
+    setDraggedIndex(null);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -206,7 +276,7 @@ export default function AdminProductsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-amber-900">Product Management</h1>
-            <p className="text-amber-700 mt-1">Manage your product catalog</p>
+            <p className="text-amber-700 mt-1">Manage your product catalog and arrange display order</p>
           </div>
           <button
             onClick={openCreateModal}
@@ -218,6 +288,26 @@ export default function AdminProductsPage() {
           </button>
         </div>
 
+        {/* Reorder Toggle */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setIsReordering(!isReordering)}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              isReordering
+                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-150'
+            }`}
+          >
+            <GripVertical className="w-4 h-4" />
+            <span>{isReordering ? 'Exit Reorder Mode' : 'Reorder Products'}</span>
+          </button>
+          {isReordering && (
+            <p className="text-sm text-amber-600">
+              Drag and drop products to rearrange their order on the front page
+            </p>
+          )}
+        </div>
+
         {/* Products Grid */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -225,11 +315,47 @@ export default function AdminProductsPage() {
           </div>
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
+            {products.map((product, index) => (
               <div
                 key={product.id}
-                className="bg-white rounded-xl shadow-sm border border-amber-100 overflow-hidden hover:shadow-md transition-shadow"
+                draggable={isReordering}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`bg-white rounded-xl shadow-sm border border-amber-100 overflow-hidden hover:shadow-md transition-all ${
+                  isReordering ? 'cursor-move hover:shadow-lg' : ''
+                } ${draggedIndex === index ? 'opacity-50' : ''}`}
               >
+                {/* Reorder Handle */}
+                {isReordering && (
+                  <div className="bg-amber-50 px-4 py-2 border-b border-amber-100 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <GripVertical className="w-4 h-4 text-amber-600" />
+                      <span className="text-sm font-medium text-amber-800">
+                        Position {index + 1}
+                      </span>
+                    </div>
+                    <div className="flex space-x-1">
+                      {index > 0 && (
+                        <button
+                          onClick={() => moveProduct(index, index - 1)}
+                          className="p-1 text-amber-600 hover:bg-amber-100 rounded"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                      )}
+                      {index < products.length - 1 && (
+                        <button
+                          onClick={() => moveProduct(index, index + 1)}
+                          className="p-1 text-amber-600 hover:bg-amber-100 rounded"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Product Image */}
                 <div className="relative h-48 bg-amber-50 flex items-center justify-center">
                   {product.image ? (
@@ -258,7 +384,9 @@ export default function AdminProductsPage() {
                     <p className="text-sm text-amber-600 mb-3 line-clamp-2">{product.description}</p>
                   )}
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-amber-900">${product.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-amber-900">
+                      {product.price !== null && product.price !== undefined ? `$${product.price.toFixed(2)}` : 'Price TBD'}
+                    </span>
                     <span className="text-sm text-amber-600">Stock: {product.stock}</span>
                   </div>
 
@@ -316,27 +444,27 @@ export default function AdminProductsPage() {
                 <input
                   type="text"
                   required
+                  minLength={1}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                  placeholder="fluffychoo"
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="Enter product name (e.g., fluffychoo)"
                 />
               </div>
 
-              {/* Price */}
+              {/* Price - Now Optional */}
               <div>
                 <label className="block text-sm font-medium text-amber-900 mb-2">
-                  Price ($) *
+                  Price ($) <span className="text-gray-500 text-sm font-normal">(Optional - leave empty for "Price TBD")</span>
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  required
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                  placeholder="2.99"
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="2.99 (optional)"
                 />
               </div>
 
@@ -391,30 +519,13 @@ export default function AdminProductsPage() {
                       </p>
                       <p className="text-xs text-amber-600">PNG, JPG, or WebP (MAX. 5MB)</p>
                     </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept=".png,.jpg,.jpeg,.webp"
                       onChange={handleFileChange}
                     />
                   </label>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-xs text-amber-600 mb-2">Or paste an image URL:</p>
-                  <input
-                    type="url"
-                    value={formData.image}
-                    onChange={(e) => {
-                      setFormData({ ...formData, image: e.target.value });
-                      if (e.target.value) {
-                        setImagePreview(e.target.value);
-                        setSelectedFile(null);
-                      }
-                    }}
-                    className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
-                    placeholder="https://example.com/image.jpg"
-                  />
                 </div>
               </div>
 
@@ -429,49 +540,57 @@ export default function AdminProductsPage() {
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                  placeholder="0"
                 />
               </div>
 
               {/* Active Status */}
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-5 h-5 text-amber-500 border-amber-300 rounded focus:ring-amber-500"
-                />
-                <label htmlFor="is_active" className="text-sm font-medium text-amber-900">
-                  Product is active and visible to customers
+              <div>
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    className="w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                  />
+                  <span className="text-sm font-medium text-amber-900">Product is active</span>
                 </label>
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-end space-x-3 pt-4">
+              {/* Submit Buttons */}
+              <div className="flex space-x-4 pt-4 border-t border-amber-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  disabled={isUploading}
-                  className="px-6 py-2.5 border border-amber-200 text-amber-900 font-semibold rounded-xl hover:bg-amber-50 transition-all duration-300 disabled:opacity-50"
+                  className="flex-1 px-6 py-3 text-amber-700 font-semibold rounded-xl border border-amber-300 hover:bg-amber-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploading}
-                  className="px-6 py-2.5 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                  style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+                  disabled={isUploading || !formData.name.trim()}
+                  className={`flex-1 px-6 py-3 font-semibold rounded-xl flex items-center justify-center space-x-2 transition-all duration-300 ${
+                    isUploading || !formData.name.trim()
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'text-amber-900 hover:shadow-lg transform hover:scale-[1.02]'
+                  }`}
+                  style={!isUploading && formData.name.trim() ? 
+                    { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } : 
+                    {}
+                  }
                 >
                   {isUploading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-900"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-700"></div>
                       <span>Uploading...</span>
+                    </>
+                  ) : !formData.name.trim() ? (
+                    <>
+                      <span>Product name required</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      <span>{editingProduct ? 'Update' : 'Create'} Product</span>
+                      <span>{editingProduct ? 'Update Product' : 'Create Product'}</span>
                     </>
                   )}
                 </button>

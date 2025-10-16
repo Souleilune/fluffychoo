@@ -1,4 +1,6 @@
-// File path: src/app/api/products/route.ts
+// HOTFIX for src/app/api/products/route.ts
+// Replace the entire file content with this:
+
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
@@ -9,7 +11,7 @@ export async function GET() {
       .from('products')
       .select('*')
       .eq('is_active', true)
-      .gt('price', 0)
+      .order('display_order', { ascending: true }) // HOTFIX: Order by display_order
       .order('name', { ascending: true });
 
     if (error) {

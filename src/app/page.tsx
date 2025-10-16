@@ -9,7 +9,7 @@ import OrderForm from '@/components/OrderForm';
 interface Product {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
   description: string | null;
   image: string | null;
   stock: number;

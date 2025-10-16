@@ -35,26 +35,52 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received POST body:', body);
+    console.log('Received POST body:', JSON.stringify(body, null, 2));
     
-    // Extract and validate fields
-    const name = body.name?.trim();
-    const price = body.price?.trim();
-    const description = body.description?.trim();
-    const image = body.image?.trim();
-    const stock = body.stock;
-    const is_active = body.is_active;
+    // BULLETPROOF: Extract and validate fields with extreme caution
+    const name = body?.name;
+    const price = body?.price;
+    const description = body?.description;
+    const image = body?.image;
+    const stock = body?.stock;
+    const is_active = body?.is_active;
 
-    // Validate required fields
-    if (!name) {
-      console.log('Validation failed: name is missing');
+    console.log('Field analysis:', {
+      name: { value: name, type: typeof name, isNull: name === null, isUndefined: name === undefined },
+      price: { value: price, type: typeof price },
+      description: { value: description, type: typeof description },
+      image: { value: image, type: typeof image },
+      stock: { value: stock, type: typeof stock },
+      is_active: { value: is_active, type: typeof is_active },
+    });
+
+    // BULLETPROOF: Name validation
+    if (name === null || name === undefined) {
+      console.error('VALIDATION FAILED: name is null or undefined');
       return NextResponse.json(
-        { error: 'Product name is required' },
+        { error: 'Product name is required (received null/undefined)' },
         { status: 400 }
       );
     }
 
-    // Get the next display_order value
+    if (typeof name !== 'string') {
+      console.error('VALIDATION FAILED: name is not a string, type:', typeof name);
+      return NextResponse.json(
+        { error: `Product name must be a string (received ${typeof name})` },
+        { status: 400 }
+      );
+    }
+
+    const trimmedName = name.trim();
+    if (trimmedName === '') {
+      console.error('VALIDATION FAILED: name is empty after trim');
+      return NextResponse.json(
+        { error: 'Product name cannot be empty' },
+        { status: 400 }
+      );
+    }
+
+    // BULLETPROOF: Get display_order
     const { data: maxOrderData } = await supabaseAdmin
       .from('products')
       .select('display_order')
@@ -63,19 +89,66 @@ export async function POST(request: NextRequest) {
 
     const nextOrder = (maxOrderData && maxOrderData[0]?.display_order || 0) + 1;
 
-    // Prepare the product data
+    // BULLETPROOF: Process other fields safely
+    let processedPrice = null;
+    if (price !== null && price !== undefined && price !== '') {
+      if (typeof price === 'string' && price.trim() !== '') {
+        const numPrice = parseFloat(price.trim());
+        if (!isNaN(numPrice) && numPrice >= 0) {
+          processedPrice = numPrice;
+        }
+      } else if (typeof price === 'number' && !isNaN(price) && price >= 0) {
+        processedPrice = price;
+      }
+    }
+
+    let processedDescription = null;
+    if (description !== null && description !== undefined && typeof description === 'string') {
+      const trimmedDesc = description.trim();
+      if (trimmedDesc !== '') {
+        processedDescription = trimmedDesc;
+      }
+    }
+
+    let processedImage = null;
+    if (image !== null && image !== undefined && typeof image === 'string') {
+      const trimmedImage = image.trim();
+      if (trimmedImage !== '') {
+        processedImage = trimmedImage;
+      }
+    }
+
+    let processedStock = 0;
+    if (stock !== null && stock !== undefined) {
+      const numStock = typeof stock === 'string' ? parseInt(stock) : stock;
+      if (!isNaN(numStock) && numStock >= 0) {
+        processedStock = numStock;
+      }
+    }
+
+    // BULLETPROOF: Final product data
     const productData = {
-      name: name,
-      price: price && price !== '' ? parseFloat(price) : null,
-      description: description && description !== '' ? description : null,
-      image: image && image !== '' ? image : null,
-      stock: stock ? parseInt(stock) : 0,
-      is_active: is_active !== undefined ? Boolean(is_active) : true,
+      name: trimmedName, // We know this is safe now
+      price: processedPrice,
+      description: processedDescription,
+      image: processedImage,
+      stock: processedStock,
+      is_active: is_active === true || is_active === 'true',
       display_order: nextOrder,
     };
 
-    console.log('Inserting product data:', productData);
+    console.log('FINAL PRODUCT DATA:', JSON.stringify(productData, null, 2));
 
+    // BULLETPROOF: Final validation before insert
+    if (!productData.name || productData.name === '') {
+      console.error('CRITICAL ERROR: Final product data has empty name!');
+      return NextResponse.json(
+        { error: 'Critical error: product name is empty in final data' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Attempting database insert...');
     const { data, error } = await supabaseAdmin
       .from('products')
       .insert([productData])
@@ -84,24 +157,28 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Supabase error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return NextResponse.json(
         { error: 'Failed to create product: ' + error.message },
         { status: 500 }
       );
     }
 
+    console.log('SUCCESS: Product created:', data);
     return NextResponse.json({
       success: true,
       data,
     }, { status: 201 });
   } catch (error) {
     console.error('API error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       { error: 'Internal server error: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
   }
 }
+
 
 // PATCH /api/admin/products - Update product
 export async function PATCH(request: NextRequest) {

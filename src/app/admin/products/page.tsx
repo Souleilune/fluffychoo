@@ -60,6 +60,7 @@ export default function AdminProductsPage() {
     setEditingProduct(null);
     setSelectedFile(null);
     setImagePreview(null);
+    // SAFE: Ensure all string fields are proper strings
     setFormData({
       name: '',
       price: '',
@@ -70,18 +71,18 @@ export default function AdminProductsPage() {
     });
     setIsModalOpen(true);
   };
-
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
     setSelectedFile(null);
     setImagePreview(product.image);
+    // SAFE: Handle potential null/undefined values from product
     setFormData({
-      name: product.name,
-      price: product.price?.toString() || '',
-      description: product.description || '',
-      image: product.image || '',
-      stock: product.stock.toString(),
-      is_active: product.is_active,
+      name: product.name || '', // Ensure string
+      price: product.price?.toString() || '', // Safe conversion
+      description: product.description || '', // Handle null
+      image: product.image || '', // Handle null
+      stock: product.stock?.toString() || '0', // Safe conversion
+      is_active: product.is_active !== undefined ? product.is_active : true,
     });
     setIsModalOpen(true);
   };
@@ -141,68 +142,81 @@ export default function AdminProductsPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validate required fields
-    if (!formData.name || formData.name.trim() === '') {
-      alert('Product name is required');
+  // Validate required fields - with null/undefined checks
+  if (!formData.name || typeof formData.name !== 'string' || formData.name.trim() === '') {
+    alert('Product name is required');
+    return;
+  }
+
+  console.log('Form data before processing:', formData);
+
+  try {
+    let imageUrl = formData.image;
+    if (selectedFile) {
+      imageUrl = await uploadImage() || '';
+      if (!imageUrl && selectedFile) {
+        return; // Upload failed
+      }
+    }
+
+    // FIXED: Safe payload creation with proper null checks
+    const payload = {
+      name: formData.name.trim(), // We already validated this above
+      price: (formData.price && typeof formData.price === 'string' && formData.price.trim() !== '') 
+        ? formData.price.trim() 
+        : '',
+      description: (formData.description && typeof formData.description === 'string' && formData.description.trim() !== '') 
+        ? formData.description.trim() 
+        : '',
+      image: (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') 
+        ? imageUrl.trim() 
+        : '',
+      stock: formData.stock || '0',
+      is_active: formData.is_active,
+    };
+
+    console.log('Payload being sent:', payload);
+
+    // Additional validation before sending
+    if (!payload.name || payload.name === '') {
+      console.error('ERROR: Payload name is empty after processing!');
+      alert('Error: Product name became empty during processing');
       return;
     }
 
-    console.log('Form data before processing:', formData);
-
-    try {
-      let imageUrl = formData.image;
-      if (selectedFile) {
-        imageUrl = await uploadImage() || '';
-        if (!imageUrl && selectedFile) {
-          return; // Upload failed
-        }
-      }
-
-      // Create a clean payload with proper validation
-      const payload = {
-        name: formData.name.trim(),
-        price: formData.price.trim() !== '' ? formData.price.trim() : '',
-        description: formData.description.trim() !== '' ? formData.description.trim() : '',
-        image: imageUrl ? imageUrl.trim() : '',
-        stock: formData.stock || '0',
-        is_active: formData.is_active,
-      };
-
-      console.log('Payload being sent:', payload);
-
-      let response;
-      if (editingProduct) {
-        response = await fetch('/api/admin/products', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: editingProduct.id, ...payload }),
-        });
-      } else {
-        response = await fetch('/api/admin/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      const result = await response.json();
-      console.log('API Response:', result);
-
-      if (response.ok && result.success) {
-        await fetchProducts();
-        setIsModalOpen(false);
-        setSelectedFile(null);
-        setImagePreview(null);
-      } else {
-        alert(`Failed to save product: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Failed to save product:', error);
-      alert(`Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    let response;
+    if (editingProduct) {
+      response = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingProduct.id, ...payload }),
+      });
+    } else {
+      response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
     }
-  };
+
+    const result = await response.json();
+    console.log('API Response:', result);
+
+    if (response.ok && result.success) {
+      await fetchProducts();
+      setIsModalOpen(false);
+      setSelectedFile(null);
+      setImagePreview(null);
+    } else {
+      alert(`Failed to save product: ${result.error || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('Failed to save product:', error);
+    alert(`Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;

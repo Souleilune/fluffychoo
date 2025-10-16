@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, Cookie, Loader2, Package } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package, Clock } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 
 interface Product {
@@ -21,10 +21,30 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
 
   useEffect(() => {
     fetchProducts();
+    checkOrderFormAvailability();
   }, []);
+
+  const checkOrderFormAvailability = async () => {
+    setIsCheckingAvailability(true);
+    try {
+      const response = await fetch('/api/settings');
+      const data = await response.json();
+      if (data.success) {
+        setIsOrderFormEnabled(data.data.order_form_enabled);
+      }
+    } catch (error) {
+      console.error('Failed to check order form availability:', error);
+      // Default to enabled on error
+      setIsOrderFormEnabled(true);
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
@@ -42,6 +62,10 @@ export default function Home() {
   };
 
   const handleOrderClick = (productName?: string) => {
+    if (!isOrderFormEnabled) {
+      return; // Don't open if disabled
+    }
+    
     if (productName) {
       setSelectedProduct(productName);
     }
@@ -79,10 +103,27 @@ export default function Home() {
 
             <button 
               onClick={() => handleOrderClick()}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-              style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+              disabled={!isOrderFormEnabled || isCheckingAvailability}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 font-semibold rounded-full transition-all duration-300 flex items-center space-x-2 ${
+                isOrderFormEnabled && !isCheckingAvailability
+                  ? 'hover:shadow-lg transform hover:scale-105'
+                  : 'cursor-not-allowed opacity-60'
+              }`}
+              style={isOrderFormEnabled && !isCheckingAvailability ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } : { background: '#f3f4f6' }}
             >
-              Order Now
+              {isCheckingAvailability ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">Checking...</span>
+                </>
+              ) : isOrderFormEnabled ? (
+                <span className="text-amber-900">Order Now</span>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4" />
+                  <span className="text-amber-500">Unavailable</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -195,10 +236,22 @@ export default function Home() {
                           </span>
                           <button
                             onClick={() => handleOrderClick(product.name)}
-                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 text-sm font-semibold rounded-full border-2 border-amber-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+                            disabled={!isOrderFormEnabled || !product.is_active}
+                            className={`px-4 py-2 text-sm font-semibold rounded-full border-2 transition-all duration-300 flex items-center space-x-1 ${
+                              isOrderFormEnabled && product.is_active
+                                ? 'border-amber-500 hover:shadow-lg transform hover:scale-105'
+                                : 'border-gray-300 cursor-not-allowed opacity-60'
+                            }`}
+                            style={isOrderFormEnabled && product.is_active ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } : { background: '#f3f4f6' }}
                           >
-                            Order Now
+                            {isOrderFormEnabled && product.is_active ? (
+                              <span className="text-amber-900">Order Now</span>
+                            ) : (
+                              <>
+                                <Clock className="w-3 h-3" />
+                                <span className="text-amber-500">Unavailable</span>
+                              </>
+                            )}
                           </button>
                         </>
                       ) : (

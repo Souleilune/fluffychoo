@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle } from 'lucide-react';
+import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Calendar, Clock, MapPin, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 
 interface OrderFormProps {
@@ -27,6 +27,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -48,31 +50,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   }>({ type: null, message: '' });
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoadingProducts(true);
-      setProductsError(null);
-      try {
-        const response = await fetch('/api/products');
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch products');
-        }
-        
-        if (data.success && Array.isArray(data.data)) {
-          setProducts(data.data);
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-        setProductsError(error instanceof Error ? error.message : 'Failed to load products');
-      } finally {
-        setIsLoadingProducts(false);
-      }
-    };
-
     if (isOpen) {
+      checkOrderFormAvailability();
       fetchProducts();
     }
   }, [isOpen]);
@@ -85,6 +64,47 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       }));
     }
   }, [selectedProduct]);
+
+  const checkOrderFormAvailability = async () => {
+    setIsCheckingAvailability(true);
+    try {
+      const response = await fetch('/api/settings');
+      const data = await response.json();
+      if (data.success) {
+        setIsOrderFormEnabled(data.data.order_form_enabled);
+      }
+    } catch (error) {
+      console.error('Failed to check order form availability:', error);
+      // Default to enabled on error
+      setIsOrderFormEnabled(true);
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setIsLoadingProducts(true);
+    setProductsError(null);
+    try {
+      const response = await fetch('/api/products');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch products');
+      }
+      
+      if (data.success && Array.isArray(data.data)) {
+        setProducts(data.data);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+      setProductsError(error instanceof Error ? error.message : 'Failed to load products');
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -252,6 +272,76 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
   if (!isOpen) return null;
 
+  // Show loading state while checking availability
+  if (isCheckingAvailability) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+            </div>
+            <p className="text-center text-amber-900 mt-4">Checking availability...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show disabled state if order form is not enabled
+  if (!isOrderFormEnabled) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={handleClose}
+        />
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all">
+            <div className="rounded-t-3xl p-6" style={{ background: 'linear-gradient(to right, #fffcdb, #fef3c7)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Clock className="w-6 h-6 text-amber-900" />
+                  <h2 className="text-xl font-bold text-amber-900">Orders Temporarily Unavailable</h2>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="p-2 hover:bg-amber-900/10 rounded-full transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-amber-900" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 text-center">
+              <div className="mb-4">
+                <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                  <Clock className="w-8 h-8 text-amber-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                  Order Form Currently Disabled
+                </h3>
+                <p className="text-amber-700 text-sm">
+                  We&apos;re temporarily not accepting new orders. Please check back later or contact us directly for assistance.
+                </p>
+              </div>
+              
+              <button
+                onClick={handleClose}
+                className="w-full px-6 py-3 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+                style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div 
@@ -307,6 +397,39 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
             {currentStep === 1 && (
               <div className="space-y-4">
                 <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Your Information</h3>
+
+                {/* Important Reminder */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 rounded-lg p-4 mb-6">
+                  <div className="flex items-start space-x-3">
+                    
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-blue-900 mb-2">Important Order Information</h4>
+                      <div className="space-y-2 text-sm text-blue-800">
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span><strong>Prep Days:</strong> Saturdays</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span><strong>Baking and Packing:</strong> Sundays(freshly made!)</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-4 h-4 text-blue-600" />
+                          <span><strong>Delivery:</strong> Sundays, 1PM onwards</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="w-4 h-4 text-blue-600" />
+                          <span><strong>Location:</strong> Metro Manila</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <AlertTriangle className="w-4 h-4 text-blue-600" />
+                          <span><strong>Order Cutoff:</strong> Fridays, 12 NN</span>
+                        </div>
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2">Freshly baked every Sunday in small batches, so make sure to order early!</h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-amber-900 mb-1">
@@ -670,4 +793,4 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       </div>
     </div>
   );
-}   
+}

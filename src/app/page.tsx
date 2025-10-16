@@ -229,33 +229,33 @@ export default function Home() {
                     </p>
                     
                     <div className="flex items-center justify-between">
-                      {product.price > 0 ? (
+                      {product.price !== null && product.price > 0 ? (
                         <>
                           <span className="text-2xl font-bold text-amber-900">
                             ₱{product.price.toFixed(2)}
                           </span>
                           <button
                             onClick={() => handleOrderClick(product.name)}
-                            disabled={!isOrderFormEnabled || !product.is_active}
-                            className={`px-4 py-2 text-sm font-semibold rounded-full border-2 transition-all duration-300 flex items-center space-x-1 ${
-                              isOrderFormEnabled && product.is_active
-                                ? 'border-amber-500 hover:shadow-lg transform hover:scale-105'
-                                : 'border-gray-300 cursor-not-allowed opacity-60'
-                            }`}
-                            style={isOrderFormEnabled && product.is_active ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } : { background: '#f3f4f6' }}
+                            disabled={!isOrderFormEnabled || isCheckingAvailability}
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
                           >
-                            {isOrderFormEnabled && product.is_active ? (
-                              <span className="text-amber-900">Order Now</span>
+                            {isCheckingAvailability ? (
+                              <Clock className="w-4 h-4" />
                             ) : (
-                              <>
-                                <Clock className="w-3 h-3" />
-                                <span className="text-amber-500">Unavailable</span>
-                              </>
+                              'Order Now'
                             )}
                           </button>
                         </>
                       ) : (
-                        <span className="text-amber-600 italic text-sm">Coming Soon</span>
+                        <>
+                          <span className="text-2xl font-bold text-amber-900">
+                            Price TBD
+                          </span>
+                          <span className="px-4 py-2 bg-gray-100 text-gray-500 font-semibold rounded-xl cursor-not-allowed">
+                            Coming Soon
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>

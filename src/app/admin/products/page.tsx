@@ -469,7 +469,7 @@ export default function AdminProductsPage() {
               {/* Price - Now Optional */}
               <div>
                 <label className="block text-sm font-medium text-amber-900 mb-2">
-                  Price ($) <span className="text-gray-500 text-sm font-normal">(Optional - leave empty for "Price TBD")</span>
+                  Price ($) <span className="text-gray-500 text-sm font-normal">(Optional - leave empty for &quot;Price TBD&quot;)</span>
                 </label>
                 <input
                   type="number"

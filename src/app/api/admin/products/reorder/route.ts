@@ -1,5 +1,3 @@
-// HOTFIX: Create new file src/app/api/admin/products/reorder/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
@@ -16,28 +14,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update display_order for each product
-    const updates = productIds.map((productId, index) => ({
-      id: productId,
-      display_order: index + 1,
-      updated_at: new Date().toISOString(),
-    }));
+    // Update each product's display_order individually using update instead of upsert
+    const updatePromises = productIds.map(async (productId, index) => {
+      const { error } = await supabaseAdmin
+        .from('products')
+        .update({
+          display_order: index + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', productId);
 
-    // Use upsert to update multiple records efficiently
-    const { error } = await supabaseAdmin
-      .from('products')
-      .upsert(updates, {
-        onConflict: 'id',
-        ignoreDuplicates: false
-      });
+      if (error) {
+        console.error(`Error updating product ${productId}:`, error);
+        throw error;
+      }
+      
+      return productId;
+    });
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: 'Failed to reorder products' },
-        { status: 500 }
-      );
-    }
+    // Execute all updates
+    await Promise.all(updatePromises);
 
     return NextResponse.json({
       success: true,
@@ -46,7 +42,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to reorder products' },
       { status: 500 }
     );
   }

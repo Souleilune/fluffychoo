@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+interface ProductUpdateData {
+  name?: string;
+  price?: number | null;
+  description?: string | null;
+  image?: string | null;
+  stock?: number;
+  is_active?: boolean;
+  display_order?: number;
+  updated_at?: string;
+}
+
 // GET /api/admin/products - Get all products
 export async function GET() {
   try {
@@ -195,8 +206,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Process update data
-    const updateData: any = {};
+    // Process update data with proper typing
+    const updateData: ProductUpdateData = {};
 
     if (updateFields.name !== undefined) {
       const name = updateFields.name?.trim();
@@ -267,7 +278,6 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
-
 // DELETE /api/admin/products - Delete product
 export async function DELETE(request: NextRequest) {
   try {

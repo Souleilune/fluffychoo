@@ -10,7 +10,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "fluffychoo | Premium Mochi Brownies",
+  title: "fluffychoo | Premium Soft Desserts",
   description: "Indulge in premium mochi brownies, handcrafted daily with love at fluffychoo. The perfect fusion of chewy Japanese mochi and rich, fudgy brownies baked to golden perfection.",
   keywords: "mochi brownies, premium brownies, Japanese mochi, artisan brownies, handcrafted desserts, golden brownies, fluffychoo",
   authors: [{ name: "fluffychoo" }],
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "fluffychoo | Premium Mochi Brownies",
-    description: "Premium comfort in every bite. Handcrafted mochi brownies baked fresh daily at fluffychoo.",
+    title: "fluffychoo | Premium Soft Desserts",
+    description: "Premium softness in every bite. Handcrafted mochi brownies baked fresh daily at fluffychoo.",
     type: "website",
     locale: "en_US",
   },

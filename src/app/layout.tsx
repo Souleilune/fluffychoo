@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "fluffychoo | Premium Soft Desserts",
-    description: "Premium comfort in every bite. Handcrafted mochi brownies baked fresh daily at fluffychoo.",
+    description: "Premium softness in every bite. Handcrafted mochi brownies baked fresh daily at fluffychoo.",
   },
 };
 

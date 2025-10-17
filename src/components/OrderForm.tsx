@@ -417,7 +417,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                       <div className="space-y-2 text-sm text-blue-800">
                         <div className="flex items-center space-x-2">
                           <div className="flex space-x-2">
-                            <span>All orders are baked and packed on Sunday, with delivery scheduled the same day. We'll notify you once your order is ready so you can arrange delivery accordingly.</span>
+                            <span>All orders are baked and packed on Sunday, with delivery scheduled the same day. We&apos;ll notify you once your order is ready so you can arrange delivery accordingly.</span>
                           </div>
                         </div>
                       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Calendar, Clock, MapPin, AlertTriangle } from 'lucide-react';
+import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 
 interface OrderFormProps {
@@ -398,39 +398,32 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               <div className="space-y-4">
                 <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Your Information</h3>
 
-                {/* Important Reminder */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 rounded-lg p-4 mb-6">
                   <div className="flex items-start space-x-3">
-                    
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-blue-900 mb-2">Important Order Information</h4>
+                      <div className="space-y-2 text-sm text-blue-800 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <AlertTriangle className="w-4 h-4 text-blue-600"/>
+                          <span><strong>Important Order Information!</strong></span>
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-sm text-blue-800 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="flex space-x-2">
+                            <span>Pre-orders are open from Monday to Friday, 6AM to 9PM, or until we reach our weekly limit, whichever comes first.</span>
+                          </div>
+                        </div>
+                      </div>
                       <div className="space-y-2 text-sm text-blue-800">
                         <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-blue-600" />
-                          <span><strong>Prep Days:</strong> Saturdays</span>
+                          <div className="flex space-x-2">
+                            <span>All orders are baked and packed on Sunday, with delivery scheduled the same day. We'll notify you once your order is ready so you can arrange delivery accordingly.</span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-blue-600" />
-                          <span><strong>Baking and Packing:</strong> Sundays(freshly made!)</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-blue-600" />
-                          <span><strong>Delivery:</strong> Sundays, 1PM onwards</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="w-4 h-4 text-blue-600" />
-                          <span><strong>Location:</strong> Metro Manila</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <AlertTriangle className="w-4 h-4 text-blue-600" />
-                          <span><strong>Order Cutoff:</strong> Fridays, 12 NN</span>
-                        </div>
-                        <h4 className="text-sm font-semibold text-blue-900 mb-2">Freshly baked every Sunday in small batches, so make sure to order early!</h4>
                       </div>
                     </div>
                   </div>
                 </div>
-                
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-amber-900 mb-1">
                     Full Name <span className="text-red-500">*</span>

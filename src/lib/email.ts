@@ -360,7 +360,7 @@ export function generateAdminOrderNotification(orderDetails: {
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(to right, #dc2626, #ea580c); padding: 32px 24px; text-align: center;">
+                    <td style="background: linear-gradient(to right, #fef9c3, #fde68a); padding: 32px 24px; text-align: center;">
                       <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; font-family: 'Poppins', sans-serif;">
                          New Order Alert
                       </h1>
@@ -376,10 +376,10 @@ export function generateAdminOrderNotification(orderDetails: {
                       
                       <!-- Order Reference -->
                       <div class="order-reference-box" style="text-align: center; margin-bottom: 24px; padding: 16px; background: linear-gradient(to right, #fef3c7, #fde68a); border-radius: 8px;">
-                        <p style="margin: 0 0 4px; color: #78350f; font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <p style="margin: 0 0 4px; color: #1a1410; font-size: 12px; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
                           Order Reference
                         </p>
-                        <p style="margin: 0; color: #713f12; font-size: 24px; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 2px;">
+                        <p style="margin: 0; color: #1a1410; font-size: 24px; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 2px;">
                           ${orderReference}
                         </p>
                       </div>

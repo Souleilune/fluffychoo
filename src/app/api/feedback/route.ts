@@ -8,25 +8,33 @@ export async function POST(request: NextRequest) {
 
     if (!title || !suggestion) {
       return NextResponse.json(
-        { error: 'Title and suggestion are required' },
+        { error: 'Title and feedback are required' },
         { status: 400 }
       );
     }
 
     const insertData: {
       title: string;
-      suggestion: string;
+      feedback: string;
+      name?: string;
+      email?: string;
       status: string;
-      created_by: null;
     } = {
-      title: `[Customer] ${title.trim()}`,
-      suggestion: `From: ${name || 'Anonymous'}${email ? ` (${email})` : ''}\n\n${suggestion.trim()}`,
+      title: title.trim(),
+      feedback: suggestion.trim(),
       status: 'pending',
-      created_by: null,
     };
 
+    if (name && name.trim()) {
+      insertData.name = name.trim();
+    }
+
+    if (email && email.trim()) {
+      insertData.email = email.trim();
+    }
+
     const { data, error } = await supabaseAdmin
-      .from('suggestions')
+      .from('customer_feedback')
       .insert([insertData])
       .select()
       .single();

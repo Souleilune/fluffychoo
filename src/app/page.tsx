@@ -292,7 +292,7 @@ export default function Home() {
                 
                 <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
                   <Cookie className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-amber-900">Fresh Daily</p>
+                  <p className="text-sm font-semibold text-amber-900">Weekly</p>
                 </div>
               </div>
             </div>

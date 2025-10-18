@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, Cookie, Loader2, Package, Clock } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 
 interface Product {
@@ -137,14 +137,20 @@ export default function Home() {
               <span className="text-amber-700 text-sm font-medium">Welcome to fluffychoo!</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              <span className="block text-amber-900">Serving Soft Treats</span>
-              <span className="block bg-gradient-to-r from-amber-200 via-amber-600 to-amber-300 bg-clip-text text-transparent">
-                
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight">
+              <span 
+                className="block text-amber-900" 
+                style={{ fontFamily: "'Adigiana Extreme', sans-serif" }}
+              >
+                Serving Soft Treats
+              </span>
+              <span 
+                className="block bg-gradient-to-r from-amber-200 via-amber-600 to-amber-300 bg-clip-text text-transparent"
+                style={{ fontFamily: "'Adigiana Extreme', sans-serif" }}
+              >
                 on Weekends
               </span>
             </h1>
-
             <p className="max-w-2xl mx-auto text-lg sm:text-xl text-amber-800/80 leading-relaxed">
               All products are homemade in small batches    
               (because good things take time).
@@ -351,24 +357,53 @@ export default function Home() {
               </ul>
             </div>
 
-            <div>
-              <h3 className="font-semibold mb-4">Get in Touch</h3>
-              <p className="text-amber-200 text-sm mb-2">
-                fluffyfluffychoo@gmail.com
-              </p>
-              <p className="text-amber-200 text-sm mb-2">
-                facebook: fluffychoo.co
-              </p>
-              <p className="text-amber-200 text-sm mb-2">
-                instagram: fluffychoo.co
-              </p>
-              <p className="text-amber-200 text-sm mb-2">
-                tiktok: fluffychoo.co
-              </p>
-              <p className="text-amber-200 text-sm">
-                Follow us for daily updates
-              </p>
-            </div>
+           <div>
+            <h3 className="font-semibold mb-4">Get in Touch</h3>
+            
+            <a 
+              href="mailto:fluffyfluffychoo@gmail.com"
+              className="flex items-center gap-2 text-amber-200 text-sm mb-2 hover:text-white transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              fluffyfluffychoo@gmail.com
+            </a>
+            
+            <a 
+              href="https://facebook.com/fluffychoo.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-amber-200 text-sm mb-2 hover:text-white transition-colors"
+            >
+              <Facebook className="w-4 h-4" />
+              fluffychoo.co
+            </a>
+            
+            <a 
+              href="https://instagram.com/fluffychoo.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-amber-200 text-sm mb-2 hover:text-white transition-colors"
+            >
+              <Instagram className="w-4 h-4" />
+              fluffychoo.co
+            </a>
+            
+            <a 
+              href="https://tiktok.com/@fluffychoo.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-amber-200 text-sm mb-2 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+              </svg>
+              fluffychoo.co
+            </a>
+            
+            <p className="text-amber-200 text-sm mt-4">
+              Follow us for daily updates
+            </p>
+          </div>
           </div>
 
           <div className="border-t border-amber-800 mt-8 pt-8 text-center text-amber-300 text-sm">

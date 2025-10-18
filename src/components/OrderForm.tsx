@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
+import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, AlertTriangle, Trash2, Plus } from 'lucide-react';
 import Image from 'next/image';
 
 interface OrderFormProps {
@@ -20,6 +20,13 @@ interface Product {
   is_active: boolean;
 }
 
+interface OrderItem {
+  productId: string;
+  productName: string;
+  price: number;
+  quantity: number;
+}
+
 type Step = 1 | 2 | 3 | 4;
 
 export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFormProps) {
@@ -34,9 +41,11 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     location: '',
     email: '',
     contactNumber: '',
-    order: selectedProduct || '',
-    quantity: 1,
   });
+  
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
   
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string>('');
@@ -57,13 +66,13 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   }, [isOpen]);
 
   useEffect(() => {
-    if (selectedProduct) {
-      setFormData(prev => ({
-        ...prev,
-        order: selectedProduct,
-      }));
+    if (selectedProduct && products.length > 0) {
+      const product = products.find(p => p.name === selectedProduct);
+      if (product) {
+        setSelectedProductId(product.id);
+      }
     }
-  }, [selectedProduct]);
+  }, [selectedProduct, products]);
 
   const checkOrderFormAvailability = async () => {
     setIsCheckingAvailability(true);
@@ -75,7 +84,6 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       }
     } catch (error) {
       console.error('Failed to check order form availability:', error);
-      // Default to enabled on error
       setIsOrderFormEnabled(true);
     } finally {
       setIsCheckingAvailability(false);
@@ -112,9 +120,10 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       location: '',
       email: '',
       contactNumber: '',
-      order: '',
-      quantity: 1,
     });
+    setOrderItems([]);
+    setSelectedProductId('');
+    setSelectedQuantity(1);
     setPaymentProof(null);
     setPaymentProofPreview('');
     setTermsAccepted(false);
@@ -128,12 +137,60 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     onClose();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'quantity' ? parseInt(value) || 1 : value,
+      [name]: value,
     }));
+  };
+
+  const handleAddProduct = () => {
+    if (!selectedProductId || selectedQuantity < 1) {
+      alert('Please select a product and quantity');
+      return;
+    }
+
+    const product = products.find(p => p.id === selectedProductId);
+    if (!product) return;
+
+    const existingIndex = orderItems.findIndex(item => item.productId === selectedProductId);
+    
+    if (existingIndex >= 0) {
+      const newItems = [...orderItems];
+      newItems[existingIndex].quantity += selectedQuantity;
+      setOrderItems(newItems);
+    } else {
+      setOrderItems([...orderItems, {
+        productId: product.id,
+        productName: product.name,
+        price: product.price,
+        quantity: selectedQuantity,
+      }]);
+    }
+
+    setSelectedProductId('');
+    setSelectedQuantity(1);
+  };
+
+  const handleRemoveProduct = (productId: string) => {
+    setOrderItems(orderItems.filter(item => item.productId !== productId));
+  };
+
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    
+    const product = products.find(p => p.id === productId);
+    if (product && newQuantity > product.stock) {
+      alert(`Only ${product.stock} items available in stock`);
+      return;
+    }
+
+    setOrderItems(orderItems.map(item => 
+      item.productId === productId 
+        ? { ...item, quantity: newQuantity }
+        : item
+    ));
   };
 
   const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,7 +246,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       case 1:
         return !!(formData.name && formData.location && formData.contactNumber);
       case 2:
-        return !!(formData.order && formData.quantity > 0);
+        return orderItems.length > 0;
       case 3:
         return !!paymentProof;
       case 4:
@@ -233,6 +290,12 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
         }
       }
 
+      const orderString = orderItems.map(item => 
+        `${item.productName} (x${item.quantity})`
+      ).join(', ');
+
+      const totalQuantity = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -240,6 +303,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
         },
         body: JSON.stringify({
           ...formData,
+          order: orderString,
+          quantity: totalQuantity,
           paymentProofUrl,
           termsAccepted,
         }),
@@ -267,12 +332,10 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     }
   };
 
-  const selectedProductData = products.find(p => p.name === formData.order);
-  const totalPrice = selectedProductData ? selectedProductData.price * formData.quantity : 0;
+  const totalPrice = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   if (!isOpen) return null;
 
-  // Show loading state while checking availability
   if (isCheckingAvailability) {
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -289,7 +352,6 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     );
   }
 
-  // Show disabled state if order form is not enabled
   if (!isOrderFormEnabled) {
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -424,6 +486,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     </div>
                   </div>
                 </div>
+
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-amber-900 mb-1">
                     Full Name <span className="text-red-500">*</span>
@@ -452,7 +515,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
-                    placeholder="123 Main St, City"
+                    placeholder="Barangay, City, Province"
                   />
                 </div>
 
@@ -516,67 +579,102 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   </div>
                 ) : (
                   <>
-                    <div>
-                      <label htmlFor="order" className="block text-sm font-medium text-amber-900 mb-1">
-                        Select Product <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="order"
-                        name="order"
-                        value={formData.order}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white"
+                    <div className="space-y-3">
+                      <div>
+                        <label htmlFor="product" className="block text-sm font-medium text-amber-900 mb-1">
+                          Select Product
+                        </label>
+                        <select
+                          id="product"
+                          value={selectedProductId}
+                          onChange={(e) => setSelectedProductId(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white"
+                        >
+                          <option value="">Choose a product...</option>
+                          {products.map(product => (
+                            <option key={product.id} value={product.id}>
+                              {product.name} - ₱{product.price.toFixed(2)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label htmlFor="quantity" className="block text-sm font-medium text-amber-900 mb-1">
+                          Quantity
+                        </label>
+                        <input
+                          type="number"
+                          id="quantity"
+                          value={selectedQuantity}
+                          onChange={(e) => setSelectedQuantity(parseInt(e.target.value) || 1)}
+                          required
+                          min="1"
+                          max={products.find(p => p.id === selectedProductId)?.stock || 100}
+                          className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                        />
+                        {selectedProductId && products.find(p => p.id === selectedProductId) && (
+                          <p className="text-sm text-amber-600 mt-1">
+                            Available stock: {products.find(p => p.id === selectedProductId)!.stock}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handleAddProduct}
+                        disabled={!selectedProductId}
+                        className="w-full px-4 py-2.5 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                       >
-                        <option value="">Choose a product...</option>
-                        {products.map(product => (
-                          <option key={product.id} value={product.name}>
-                            {product.name} - ₱{product.price.toFixed(2)}
-                          </option>
-                        ))}
-                      </select>
+                        <Plus className="w-5 h-5" />
+                        <span>Add to Order</span>
+                      </button>
                     </div>
 
-                    <div>
-                      <label htmlFor="quantity" className="block text-sm font-medium text-amber-900 mb-1">
-                        Quantity <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        id="quantity"
-                        name="quantity"
-                        value={formData.quantity}
-                        onChange={handleChange}
-                        required
-                        min="1"
-                        max={selectedProductData?.stock || 100}
-                        className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
-                      />
-                      {selectedProductData && (
-                        <p className="text-sm text-amber-600 mt-1">
-                          Available stock: {selectedProductData.stock}
-                        </p>
-                      )}
-                    </div>
-
-                    {selectedProductData && (
-                      <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-amber-900 font-medium">Product:</span>
-                          <span className="text-amber-900">{selectedProductData.name}</span>
+                    {orderItems.length > 0 && (
+                      <div className="space-y-3 mt-6">
+                        <h4 className="font-semibold text-amber-900">Your Order</h4>
+                        <div className="space-y-2">
+                          {orderItems.map((item) => (
+                            <div key={item.productId} className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-amber-900">{item.productName}</span>
+                                <button
+                                  onClick={() => handleRemoveProduct(item.productId)}
+                                  className="p-1 hover:bg-red-50 rounded transition-colors"
+                                  aria-label="Remove item"
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-500" />
+                                </button>
+                              </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-amber-700">Qty:</span>
+                                  <input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                                    min="1"
+                                    className="w-16 px-2 py-1 border border-amber-200 rounded text-center"
+                                  />
+                                </div>
+                                <span className="font-medium text-amber-900">
+                                  ₱{(item.price * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-amber-900 font-medium">Price per unit:</span>
-                          <span className="text-amber-900">₱{selectedProductData.price.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-amber-900 font-medium">Quantity:</span>
-                          <span className="text-amber-900">{formData.quantity}</span>
-                        </div>
-                        <div className="border-t border-amber-300 pt-2 mt-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-amber-900 font-bold text-lg">Total:</span>
-                            <span className="text-amber-900 font-bold text-lg">₱{totalPrice.toFixed(2)}</span>
+                        
+                        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-amber-900 font-medium">Quantity:</span>
+                            <span className="text-amber-900">{orderItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                          </div>
+                          <div className="border-t border-amber-300 pt-2 mt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-amber-900 font-bold text-lg">Total:</span>
+                              <span className="text-amber-900 font-bold text-lg">₱{totalPrice.toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -617,27 +715,28 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   </label>
                   
                   {!paymentProofPreview ? (
-                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer bg-amber-50 hover:bg-amber-100 transition-colors">
-                      <Upload className="w-10 h-10 text-amber-600 mb-2" />
-                      <span className="text-sm text-amber-700 font-medium">Click to upload</span>
-                      <span className="text-xs text-amber-600 mt-1">PNG, JPG, WEBP (max 5MB)</span>
+                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer hover:border-amber-500 hover:bg-amber-50 transition-all">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-10 h-10 text-amber-400 mb-3" />
+                        <p className="mb-2 text-sm text-amber-700">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-amber-600">PNG, JPG, or JPEG (MAX. 5MB)</p>
+                      </div>
                       <input
                         type="file"
+                        className="hidden"
                         accept="image/*"
                         onChange={handlePaymentProofChange}
-                        className="hidden"
                       />
                     </label>
                   ) : (
-                    <div className="relative">
-                      <div className="relative w-full h-60 border-2 border-amber-200 rounded-xl overflow-hidden">
-                        <Image
-                          src={paymentProofPreview}
-                          alt="Payment proof preview"
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
+                    <div className="relative border-2 border-amber-300 rounded-xl overflow-hidden">
+                      <Image
+                        src={paymentProofPreview}
+                        alt="Payment proof preview"
+                        className="w-full h-64 object-contain bg-amber-50"
+                      />
                       <button
                         type="button"
                         onClick={() => {
@@ -656,11 +755,11 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
             {currentStep === 4 && (
               <div className="space-y-4">
-                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Review & Confirm</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Confirm Your Order</h3>
                 
                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-3">
                   <div>
-                    <span className="text-sm font-medium text-amber-900">Name:</span>
+                    <span className="text-sm font-medium text-amber-900">Full Name:</span>
                     <p className="text-amber-700">{formData.name}</p>
                   </div>
                   <div>
@@ -668,7 +767,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     <p className="text-amber-700">{formData.location}</p>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-amber-900">Contact:</span>
+                    <span className="text-sm font-medium text-amber-900">Contact Number:</span>
                     <p className="text-amber-700">{formData.contactNumber}</p>
                   </div>
                   {formData.email && (
@@ -679,7 +778,13 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   )}
                   <div>
                     <span className="text-sm font-medium text-amber-900">Order:</span>
-                    <p className="text-amber-700">{formData.order} × {formData.quantity}</p>
+                    <div className="mt-1 space-y-1">
+                      {orderItems.map((item) => (
+                        <p key={item.productId} className="text-amber-700">
+                          {item.productName} × {item.quantity}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                   <div className="border-t border-amber-300 pt-2">
                     <span className="text-sm font-medium text-amber-900">Total Amount:</span>

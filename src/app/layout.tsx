@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import localFont from 'next/font/local';
 import "./globals.css";
 
 const poppins = Poppins({
@@ -7,6 +8,12 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-poppins",
+});
+
+const adigiana = localFont({
+  src: '../../public/fonts/AdigianaExtreme.ttf',
+  variable: '--font-adigiana',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {

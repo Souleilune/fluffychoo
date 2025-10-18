@@ -1,6 +1,14 @@
 /* src/app/globals.css */
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Adigiana Extreme';
+  src: url('/fonts/AdigianaExtreme.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;

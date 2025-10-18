@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
+import FeedbackModal from '@/components/FeedbackModal';
 
 interface Product {
   id: string;
@@ -22,7 +23,9 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
+
 
   useEffect(() => {
     fetchProducts();
@@ -292,7 +295,11 @@ export default function Home() {
                 
                 <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
                   <Cookie className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-amber-900">Weekly</p>
+                  <p className="text-sm font-semibold text-amber-900">Freshly Baked</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-2xl shadow-sm">
+                  <Leaf className="w-8 h-8 text-amber-600 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-amber-900">No Preservatives</p>
                 </div>
               </div>
             </div>
@@ -353,6 +360,15 @@ export default function Home() {
                 <li><Link href="#products" className="hover:text-white transition-colors">Products</Link></li>
                 <li><Link href="#about" className="hover:text-white transition-colors">About Us</Link></li>
                 <li><Link href="#contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li>
+                  <button 
+                    onClick={() => setIsFeedbackOpen(true)}
+                    className="hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    
+                    Share Feedback
+                  </button>
+                </li>
                 <li><Link href="admin/login" className="hover:text-white transition-colors">Fluffychoo</Link></li>
               </ul>
             </div>
@@ -419,6 +435,11 @@ export default function Home() {
           setSelectedProduct('');
         }}
         selectedProduct={selectedProduct}
+      />
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
       />
     </div>
   );

@@ -10,7 +10,8 @@ import {
   Package, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  MessageSquare
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -27,6 +28,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
     { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Suggestions', href: '/admin/suggestions', icon: MessageSquare },
   ];
 
   const handleLogout = async () => {

@@ -167,10 +167,21 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     setSubmitStatus({ type: null, message: '' });
     
     // Reset reCAPTCHA
-    if (typeof window !== 'undefined') {
-      window.grecaptcha?.reset();
+    if (typeof window !== 'undefined' && 
+      window.grecaptcha && 
+      typeof window.grecaptcha.reset === 'function') {
+    const captchaContainer = document.getElementById('recaptcha-container');
+    // Only reset if the container exists and has children (meaning reCAPTCHA was rendered)
+    if (captchaContainer && captchaContainer.childNodes.length > 0) {
+      try {
+        window.grecaptcha.reset();
+      } catch (error) {
+        // Silently fail - reCAPTCHA might not be initialized yet
+        console.log('reCAPTCHA reset skipped:', error);
+      }
     }
-  };
+  }
+};
 
   const handleClose = () => {
     resetForm();
@@ -418,10 +429,21 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       });
       
       // Reset reCAPTCHA on error
-      if (typeof window !== 'undefined') {
-        window.grecaptcha?.reset();
+      if (typeof window !== 'undefined' && 
+      window.grecaptcha && 
+      typeof window.grecaptcha.reset === 'function') {
+    const captchaContainer = document.getElementById('recaptcha-container');
+    // Only reset if the container exists and has children (meaning reCAPTCHA was rendered)
+    if (captchaContainer && captchaContainer.childNodes.length > 0) {
+      try {
+        window.grecaptcha.reset();
         setCaptchaToken(null);
+      } catch (error) {
+        // Silently fail - reCAPTCHA might not be initialized
+        console.log('reCAPTCHA reset skipped:', error);
       }
+    }
+  }
     } finally {
       setIsSubmitting(false);
     }
@@ -449,13 +471,16 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
   if (!isOrderFormEnabled) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
+       <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={handleClose}
+      />
+      <div className="flex min-h-full items-center justify-center p-4">
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-          onClick={handleClose}
-        />
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all">
+          className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
             <div className="rounded-t-3xl p-6" style={{ background: 'linear-gradient(to right, #fffcdb, #fef3c7)' }}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -500,14 +525,17 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={handleClose}
-      />
+  <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+      onClick={handleClose}
+    />
 
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl transform transition-all">
+      <div 
+        className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl transform transition-all"
+        onClick={(e) => e.stopPropagation()}
+      >
           <div className="rounded-t-3xl p-4 sm:p-6" style={{ background: 'linear-gradient(to right, #fffcdb, #fef3c7)' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 sm:gap-3">

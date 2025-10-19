@@ -359,7 +359,6 @@ export default function Home() {
               <ul className="space-y-2 text-amber-200 text-sm">
                 <li><Link href="#products" className="hover:text-white transition-colors">Products</Link></li>
                 <li><Link href="#about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="#contact" className="hover:text-white transition-colors">Contact</Link></li>
                 <li>
                   <button 
                     onClick={() => setIsFeedbackOpen(true)}

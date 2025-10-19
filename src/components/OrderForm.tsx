@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, AlertTriangle, Trash2, Plus } from 'lucide-react';
+import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, Trash2, Plus } from 'lucide-react';
 import Image from 'next/image';
+
+// Extend Window interface for grecaptcha
+declare global {
+  interface Window {
+    grecaptcha?: {
+      render: (container: string, params: { sitekey: string; callback: string }) => void;
+      reset: () => void;
+    };
+    onCaptchaSuccess?: (token: string) => void;
+  }
+}
 
 interface OrderFormProps {
   isOpen: boolean;
@@ -27,7 +38,7 @@ interface OrderItem {
   quantity: number;
 }
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
 export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFormProps) {
   const [currentStep, setCurrentStep] = useState<Step>(1);
@@ -37,7 +48,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     location: '',
     email: '',
     contactNumber: '',
@@ -47,9 +59,16 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   
+  const [deliveryPolicyAccepted, setDeliveryPolicyAccepted] = useState(false);
+  const [courierCheckbox, setCourierCheckbox] = useState(false);
+  const [sundayOnlyCheckbox, setSundayOnlyCheckbox] = useState(false);
+  const [courierBookingCheckbox, setCourierBookingCheckbox] = useState(false);
+  const [deliveryDetailsCheckbox, setDeliveryDetailsCheckbox] = useState(false);
+  const [noCancellationCheckbox, setNoCancellationCheckbox] = useState(false);
+  
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string>('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [orderReference, setOrderReference] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -62,6 +81,15 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     if (isOpen) {
       checkOrderFormAvailability();
       fetchProducts();
+      
+      // Load reCAPTCHA script
+      if (!document.querySelector('script[src*="recaptcha"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js';
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+      }
     }
   }, [isOpen]);
 
@@ -116,7 +144,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
   const resetForm = () => {
     setFormData({
-      name: '',
+      firstName: '',
+      lastName: '',
       location: '',
       email: '',
       contactNumber: '',
@@ -124,12 +153,23 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     setOrderItems([]);
     setSelectedProductId('');
     setSelectedQuantity(1);
+    setDeliveryPolicyAccepted(false);
+    setCourierCheckbox(false);
+    setSundayOnlyCheckbox(false);
+    setCourierBookingCheckbox(false);
+    setDeliveryDetailsCheckbox(false);
+    setNoCancellationCheckbox(false);
     setPaymentProof(null);
     setPaymentProofPreview('');
-    setTermsAccepted(false);
+    setCaptchaToken(null);
     setOrderReference('');
     setCurrentStep(1);
     setSubmitStatus({ type: null, message: '' });
+    
+    // Reset reCAPTCHA
+    if (typeof window !== 'undefined') {
+      window.grecaptcha?.reset();
+    }
   };
 
   const handleClose = () => {
@@ -244,13 +284,17 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const validateStep = (step: Step): boolean => {
     switch (step) {
       case 1:
-        return !!(formData.name && formData.location && formData.contactNumber);
+        return !!(formData.firstName && formData.lastName && formData.location && formData.contactNumber);
       case 2:
         return orderItems.length > 0;
       case 3:
-        return !!paymentProof;
+        return deliveryPolicyAccepted;
       case 4:
-        return termsAccepted;
+        return !!paymentProof;
+      case 5:
+        return !!(courierCheckbox && sundayOnlyCheckbox && courierBookingCheckbox && deliveryDetailsCheckbox && noCancellationCheckbox && captchaToken);
+      case 6:
+        return true;
       default:
         return false;
     }
@@ -261,7 +305,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       alert('Please fill in all required fields');
       return;
     }
-    if (currentStep < 4) {
+    if (currentStep < 6) {
       setCurrentStep((currentStep + 1) as Step);
     }
   };
@@ -272,9 +316,46 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     }
   };
 
+  // CAPTCHA callback function
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.onCaptchaSuccess = (token: string) => {
+        setCaptchaToken(token);
+      };
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.onCaptchaSuccess;
+      }
+    };
+  }, []);
+
+  // Render CAPTCHA when Step 5 is reached
+  useEffect(() => {
+    if (currentStep === 5 && typeof window !== 'undefined' && window.grecaptcha) {
+      // Wait a bit for DOM to be ready, then render CAPTCHA
+      const timer = setTimeout(() => {
+        const captchaContainer = document.getElementById('recaptcha-container');
+        if (captchaContainer && captchaContainer.childNodes.length === 0 && window.grecaptcha) {
+          try {
+            window.grecaptcha.render('recaptcha-container', {
+              sitekey: '6LdIZe8rAAAAALGwMeXqt-Pk4t4NY3Aydx0I6qQK',
+              callback: 'onCaptchaSuccess',
+            });
+          } catch (error) {
+            console.error('CAPTCHA render error:', error);
+          }
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
+
   const handleSubmit = async () => {
-    if (!validateStep(4)) {
-      alert('Please accept the terms and conditions');
+    if (!validateStep(5)) {
+      alert('Please complete all required checkboxes and verify the CAPTCHA');
       return;
     }
 
@@ -296,17 +377,23 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
       const totalQuantity = orderItems.reduce((sum, item) => sum + item.quantity, 0);
 
+      const fullName = `${formData.firstName} ${formData.lastName}`;
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: fullName,
+          location: formData.location,
+          email: formData.email,
+          contactNumber: formData.contactNumber,
           order: orderString,
           quantity: totalQuantity,
           paymentProofUrl,
-          termsAccepted,
+          termsAccepted: true,
+          captchaToken,
         }),
       });
 
@@ -320,13 +407,21 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
       setSubmitStatus({
         type: 'success',
-        message: 'Order submitted successfully! We\'ll contact you soon.',
+        message: 'Order submitted successfully!',
       });
+      
+      setCurrentStep(6);
     } catch (error) {
       setSubmitStatus({
         type: 'error',
         message: error instanceof Error ? error.message : 'Something went wrong',
       });
+      
+      // Reset reCAPTCHA on error
+      if (typeof window !== 'undefined') {
+        window.grecaptcha?.reset();
+        setCaptchaToken(null);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -428,25 +523,25 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               </button>
             </div>
 
-            <div className="flex items-center justify-between max-w-md mx-auto">
-              {[1, 2, 3, 4].map((step, index) => (
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              {[1, 2, 3, 4, 5, 6].map((step, index) => (
                 <div key={step} className="flex items-center">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base font-semibold transition-all ${
+                      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all ${
                         currentStep >= step
                           ? 'bg-amber-900 text-white'
                           : 'bg-white text-amber-900 border-2 border-amber-900/30'
                       }`}
                     >
-                      {currentStep > step ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" /> : step}
+                      {currentStep > step ? <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" /> : step}
                     </div>
-                    <span className="text-[10px] sm:text-xs mt-1 sm:mt-2 text-amber-900 font-medium">
-                      {step === 1 ? 'Info' : step === 2 ? 'Order' : step === 3 ? 'Payment' : 'Review'}
+                    <span className="text-[9px] sm:text-[10px] mt-1 text-amber-900 font-medium text-center">
+                      {step === 1 ? 'Info' : step === 2 ? 'Order' : step === 3 ? 'Policy' : step === 4 ? 'Payment' : step === 5 ? 'Review' : 'Done'}
                     </span>
                   </div>
-                  {index < 3 && (
-                    <div className={`w-8 sm:w-12 h-0.5 mb-4 sm:mb-6 transition-colors ${
+                  {index < 5 && (
+                    <div className={`w-6 sm:w-10 h-0.5 mb-4 sm:mb-5 transition-colors ${
                       currentStep > step ? 'bg-amber-900' : 'bg-amber-900/30'
                     }`} />
                   )}
@@ -460,47 +555,38 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               <div className="space-y-4">
                 <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Your Information</h3>
 
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 rounded-lg p-4 mb-6">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-1">
-                      <div className="space-y-2 text-sm text-blue-800 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <AlertTriangle className="w-4 h-4 text-blue-600"/>
-                          <span><strong>Important Order Information!</strong></span>
-                        </div>
-                      </div>
-                      <div className="space-y-2 text-sm text-blue-800 mb-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-2">
-                            <span>Pre-orders are open from Monday to Friday, 6AM to 9PM, or until we reach our weekly limit, whichever comes first.</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2 text-sm text-blue-800">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-2">
-                            <span>All orders are baked and packed on Sunday, with delivery scheduled the same day. We&apos;ll notify you once your order is ready so you can arrange delivery accordingly.</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-amber-900 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                      placeholder="Juan"
+                    />
                   </div>
-                </div>
 
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-amber-900 mb-1">
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
-                    placeholder="Juan Dela Cruz"
-                  />
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-amber-900 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+                      placeholder="Dela Cruz"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -686,6 +772,54 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
             {currentStep === 3 && (
               <div className="space-y-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Delivery Policy</h3>
+                
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-2">Delivery Policy</h4>
+                    <p className="text-sm text-amber-800">
+                      We bake and pack <strong>every Sunday only</strong>. Once your order is ready, we will text you so you can book your own courier 
+                      <strong> (Grab/Lalamove/Angkas Padala/Moveit etc.)</strong> for pickup.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-2">Pickup Location:</h4>
+                    <p className="text-sm text-amber-800">
+                      Pickup address will be shared via SMS once your order is ready.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-amber-900 mb-2">Important Reminders:</h4>
+                    <ul className="text-sm text-amber-800 space-y-1 list-disc list-inside">
+                      <li>We <strong>only deliver within Metro Manila</strong></li>
+                      <li><strong>Customer books and pays for courier delivery</strong></li>
+                      <li>Pickup and delivery are <strong>Sunday only</strong></li>
+                      <li>Delivery fee is <strong>not included</strong> in your order total</li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-3 border-t border-amber-300">
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="deliveryPolicy"
+                        checked={deliveryPolicyAccepted}
+                        onChange={(e) => setDeliveryPolicyAccepted(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                      />
+                      <label htmlFor="deliveryPolicy" className="text-sm text-amber-900 font-medium">
+                        I understand that I will arrange and pay for my own courier for delivery.
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="space-y-4">
                 <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Payment</h3>
                 
                 <div className="p-4 sm:p-6 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl text-center">
@@ -732,7 +866,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     </label>
                   ) : (
                     <div className="relative border-2 border-amber-300 rounded-xl overflow-hidden">
-                      <Image
+                      <img
                         src={paymentProofPreview}
                         alt="Payment proof preview"
                         className="w-full h-64 object-contain bg-amber-50"
@@ -753,14 +887,14 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               </div>
             )}
 
-            {currentStep === 4 && (
+            {currentStep === 5 && (
               <div className="space-y-4">
                 <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Confirm Your Order</h3>
                 
                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 space-y-3">
                   <div>
                     <span className="text-sm font-medium text-amber-900">Full Name:</span>
-                    <p className="text-amber-700">{formData.name}</p>
+                    <p className="text-amber-700">{formData.firstName} {formData.lastName}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-amber-900">Location:</span>
@@ -792,55 +926,147 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-2">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                  />
-                  <label htmlFor="terms" className="text-sm text-amber-700">
-                    I agree to the terms and conditions and confirm that all information provided is accurate.
-                  </label>
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <h4 className="font-semibold text-amber-900 mb-3">Required checkboxes:</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="sundayOnly"
+                        checked={sundayOnlyCheckbox}
+                        onChange={(e) => setSundayOnlyCheckbox(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                      />
+                      <label htmlFor="sundayOnly" className="text-sm text-amber-800">
+                        I understand that Fluffychoo bakes and packs every Sunday only.
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="courierBooking"
+                        checked={courierBookingCheckbox}
+                        onChange={(e) => setCourierBookingCheckbox(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                      />
+                      <label htmlFor="courierBooking" className="text-sm text-amber-800">
+                        I will book and pay for my own courier once I receive the pickup text.
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="deliveryDetails"
+                        checked={deliveryDetailsCheckbox}
+                        onChange={(e) => setDeliveryDetailsCheckbox(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                      />
+                      <label htmlFor="deliveryDetails" className="text-sm text-amber-800">
+                        I confirm that my delivery details are complete and accurate.
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="noCancellation"
+                        checked={noCancellationCheckbox}
+                        onChange={(e) => setNoCancellationCheckbox(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                      />
+                      <label htmlFor="noCancellation" className="text-sm text-amber-800">
+                        No cancellations once order is placed and paid.
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="courier"
+                        checked={courierCheckbox}
+                        onChange={(e) => setCourierCheckbox(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                      />
+                      <label htmlFor="courier" className="text-sm text-amber-800">
+                        I understand all delivery policy terms.
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
-                {submitStatus.type && (
-                  <div className={`p-4 rounded-xl ${
-                    submitStatus.type === 'success' 
-                      ? 'bg-green-50 border border-green-200' 
-                      : 'bg-red-50 border border-red-200'
-                  }`}>
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <h4 className="font-semibold text-amber-900 mb-3">Security Verification</h4>
+                  <div className="flex justify-center">
+                    <div id="recaptcha-container"></div>
+                  </div>
+                  {!captchaToken && (
+                    <p className="text-xs text-amber-600 text-center mt-2">
+                      Please complete the CAPTCHA verification above
+                    </p>
+                  )}
+                  {captchaToken && (
+                    <p className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      CAPTCHA verified successfully
+                    </p>
+                  )}
+                </div>
+
+                {submitStatus.type === 'error' && (
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-200">
                     <div className="flex items-start space-x-2">
-                      {submitStatus.type === 'success' ? (
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <p className={`text-sm ${
-                          submitStatus.type === 'success' ? 'text-green-800' : 'text-red-800'
-                        }`}>
-                          {submitStatus.message}
-                        </p>
-                        {orderReference && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium text-green-800">Order Reference:</p>
-                            <p className="text-lg font-mono font-bold text-green-900">{orderReference}</p>
-                            <p className="text-xs text-green-700 mt-1">
-                              Please save this reference number for tracking your order.
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-red-800">{submitStatus.message}</p>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
+            {currentStep === 6 && (
+              <div className="space-y-6 text-center py-8">
+                <div className="flex justify-center">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-12 h-12 text-green-600" />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-bold text-amber-900 mb-3">Thank you for your order!</h3>
+                  <p className="text-amber-800 mb-6">We&apos;re excited to bake for you!</p>
+                  
+                  <div className="bg-amber-50 rounded-xl p-6 border border-amber-200 text-left space-y-3">
+                    {orderReference && (
+                      <div>
+                        <p className="text-sm font-medium text-amber-900 mb-1">Order Reference:</p>
+                        <p className="text-2xl font-mono font-bold text-amber-900">{orderReference}</p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          Please save this reference number for tracking your order.
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="border-t border-amber-300 pt-3">
+                      <p className="text-sm text-amber-800 leading-relaxed">
+                        You&apos;ll receive a confirmation text soon. On Sunday, we&apos;ll send another message once your order is ready for pickup so you can book your courier and provide their reference number.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleClose}
+                  className="px-8 py-3 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 sm:mt-8 pt-6 border-t border-amber-200">
-              {currentStep > 1 && !submitStatus.type && (
+              {currentStep > 1 && currentStep < 6 && (
                 <button
                   onClick={handleBack}
                   className="flex items-center justify-center space-x-2 px-6 py-2.5 text-amber-900 font-semibold rounded-xl border-2 border-amber-200 hover:bg-amber-50 transition-all"
@@ -850,7 +1076,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                 </button>
               )}
 
-              {currentStep < 4 && !isLoadingProducts && !productsError ? (
+              {currentStep < 5 && !isLoadingProducts && !productsError ? (
                 <button
                   onClick={handleNext}
                   disabled={!validateStep(currentStep)}
@@ -859,10 +1085,10 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   <span>Next</span>
                   <ChevronRight className="w-5 h-5" />
                 </button>
-              ) : currentStep === 4 && !submitStatus.type ? (
+              ) : currentStep === 5 ? (
                 <button
                   onClick={handleSubmit}
-                  disabled={!termsAccepted || isSubmitting || isUploading}
+                  disabled={!validateStep(5) || isSubmitting || isUploading}
                   className="ml-auto flex items-center justify-center space-x-2 px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
                 >
                   {isSubmitting ? (
@@ -876,13 +1102,6 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                       <span>Submit Order</span>
                     </>
                   )}
-                </button>
-              ) : submitStatus.type === 'success' ? (
-                <button
-                  onClick={handleClose}
-                  className="ml-auto flex items-center justify-center space-x-2 px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 transition-all"
-                >
-                  <span>Close</span>
                 </button>
               ) : null}
             </div>

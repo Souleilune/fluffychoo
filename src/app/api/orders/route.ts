@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    const { name, location, contactNumber, order, quantity, termsAccepted } = body;
+    const { name, location, contactNumber, order, quantity, termsAccepted, captchaToken } = body;
     
     if (!name || !location || !contactNumber || !order || !quantity) {
       return NextResponse.json(
@@ -29,6 +29,34 @@ export async function POST(request: NextRequest) {
     if (!termsAccepted) {
       return NextResponse.json(
         { error: 'You must accept the terms and conditions' },
+        { status: 400 }
+      );
+    }
+
+    // CAPTCHA VERIFICATION
+    if (!captchaToken) {
+      return NextResponse.json(
+        { error: 'CAPTCHA verification required' },
+        { status: 400 }
+      );
+    }
+
+    // Verify CAPTCHA token with Google
+    const captchaVerifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
+    const captchaResponse = await fetch(captchaVerifyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`,
+    });
+
+    const captchaData = await captchaResponse.json();
+
+    if (!captchaData.success) {
+      console.error('CAPTCHA verification failed:', captchaData);
+      return NextResponse.json(
+        { error: 'CAPTCHA verification failed. Please try again.' },
         { status: 400 }
       );
     }

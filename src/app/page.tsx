@@ -3,9 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf, ChevronDown, MessageSquare, Send } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
-import FeedbackModal from '@/components/FeedbackModal';
 
 interface Product {
   id: string;
@@ -17,15 +16,71 @@ interface Product {
   is_active: boolean;
 }
 
+const faqData = [
+  {
+    question: "What is FluffyChoo?",
+    answer: "Fluffychoo is a tiny weekend dessert shop that makes soft treats like mochi brownies, banana pudding, and other dreamy sweets. Everything's made fresh in small batches."
+  },
+  {
+    question: "When do you accept orders?",
+    answer: "Pre-orders are open from Monday to Friday, 6AM to 9PM, or until we reach our weekly limit, whichever comes first."
+  },
+  {
+    question: "Where are you located?",
+    answer: "We're a home-based micro dessert shop in Paco, Manila."
+  },
+  {
+    question: "Do you deliver?",
+    answer: "Yes! Customers can book delivery through Lalamove or any courier of their choice. We'll make sure all orders are packed safely."
+  },
+  {
+    question: "Why do you only operate on weekends / Why do you only do small batches?",
+    answer: "Fluffychoo is a microbakery. Operating only on weekends helps keep things cost-efficient, manageable for a one-person setup, and minimizes waste. But who knows, maybe one day we'll grow a little bigger and share our soft treats with even more of you."
+  },
+  {
+    question: "How can I order?",
+    answer: "Simply click the Order Now button at the top of this page or on the dessert you'd like to get, then fill in your details."
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer: "We currently accept GCash (and/or bank transfer - optional)."
+  },
+  {
+    question: "How long do your desserts last?",
+    answer: "Fluffychoo desserts are made with fresh ingredients and no preservatives. Mochi Brownies: up to 2 days room temp, 5 to 7 days chilled. Banana pudding: best within 2-3 days refrigerated. Always keep them sealed and chilled for maximum softness."
+  },
+  {
+    question: "Can I freeze them?",
+    answer: "Yes, you can freeze mochi brownies for up to 2 weeks. For banana pudding, we recommend chilling only as freezing may alter texture."
+  },
+  {
+    question: "Do you accept bulk or custom orders?",
+    answer: "Not at the moment."
+  },
+  {
+    question: "Why \"Fluffychoo\"?",
+    answer: "Because our desserts are soft, gentle, and made with love. We like to think of Fluff as a small weekend ritual, a sweet little pause after a long week that lets you slow down, treat yourself, and enjoy a moment of comfort."
+  }
+];
+
 export default function Home() {
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
-
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  
+  const [feedbackForm, setFeedbackForm] = useState({
+    name: '',
+    email: '',
+    title: '',
+    suggestion: '',
+  });
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -42,7 +97,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Failed to check order form availability:', error);
-      // Default to enabled on error
       setIsOrderFormEnabled(true);
     } finally {
       setIsCheckingAvailability(false);
@@ -64,50 +118,83 @@ export default function Home() {
     }
   };
 
-  const handleOrderClick = (productName?: string) => {
-    if (!isOrderFormEnabled) {
-      return; // Don't open if disabled
-    }
-    
-    if (productName) {
-      setSelectedProduct(productName);
-    }
+  const handleOrderClick = (productName: string) => {
+    setSelectedProduct(productName);
     setIsOrderFormOpen(true);
   };
 
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingFeedback(true);
+    setFeedbackError('');
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setFeedbackSuccess(true);
+        setFeedbackForm({ name: '', email: '', title: '', suggestion: '' });
+        setTimeout(() => {
+          setFeedbackSuccess(false);
+        }, 3000);
+      } else {
+        setFeedbackError(data.error || 'Failed to submit feedback');
+      }
+    } catch (err) {
+      setFeedbackError('An error occurred. Please try again.');
+      console.error('Feedback submission error:', err);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-amber-100">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-amber-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative w-10 h-10 sm:w-22 sm:h-22 transform group-hover:scale-110 transition-transform duration-300">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="relative w-10 h-10">
                 <Image
-                  src="/choologo.png"
+                  src="/logo.svg"
                   alt="fluffychoo logo"
                   fill
                   className="object-contain"
-                  priority
                 />
               </div>
+              <span className="text-xl font-semibold text-amber-900">fluffychoo</span>
             </Link>
 
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="#products" className="text-amber-900 hover:text-amber-600 transition-colors font-medium">
+            <div className="hidden md:flex items-center space-x-6">
+              <Link href="#products" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
                 Products
               </Link>
-              <Link href="#about" className="text-amber-900 hover:text-amber-600 transition-colors font-medium">
+              <Link href="#about" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
                 About
               </Link>
-              <Link href="#contact" className="text-amber-900 hover:text-amber-600 transition-colors font-medium">
+              <Link href="#faq" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
+                FAQs
+              </Link>
+              <Link href="#feedback" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
+                Feedback
+              </Link>
+              <Link href="#contact" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
                 Contact
               </Link>
             </div>
 
-            <button 
-              onClick={() => handleOrderClick()}
+            <button
+              onClick={() => !isCheckingAvailability && isOrderFormEnabled && setIsOrderFormOpen(true)}
               disabled={!isOrderFormEnabled || isCheckingAvailability}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 font-semibold rounded-full transition-all duration-300 flex items-center space-x-2 ${
+              className={`px-6 py-2 text-sm font-semibold rounded-full transition-all duration-300 flex items-center space-x-2 ${
                 isOrderFormEnabled && !isCheckingAvailability
                   ? 'hover:shadow-lg transform hover:scale-105'
                   : 'cursor-not-allowed opacity-60'
@@ -198,47 +285,36 @@ export default function Home() {
               <p className="text-amber-700 text-lg">Loading our delicious products...</p>
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Package className="w-16 h-16 text-amber-400 mb-4" />
-              <p className="text-amber-700 text-lg">No products available at the moment</p>
-              <p className="text-amber-600 text-sm mt-2">Check back soon for fresh batches!</p>
+            <div className="text-center py-20">
+              <Package className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-semibold text-amber-900 mb-2">No Products Available</h3>
+              <p className="text-amber-700">Check back soon for our delicious treats!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-              {products.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="group relative bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-                  style={{
-                    animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
-                  }}
-                >
-                  <div className="relative h-64 sm:h-72 overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.filter(p => p.is_active).map((product) => (
+                <div key={product.id} className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                  <div className="relative h-64 overflow-hidden">
                     {product.image ? (
                       <Image
                         src={product.image}
                         alt={product.name}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transform group-hover:scale-110 transition-transform duration-700"
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-20 h-20 text-amber-300" />
+                      <div className="w-full h-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
+                        <Cookie className="w-16 h-16 text-amber-400" />
                       </div>
                     )}
                   </div>
-
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold text-amber-900 mb-2 group-hover:text-amber-700 transition-colors">
-                      {product.name}
-                    </h3>
-                    <p className="text-amber-700/70 text-sm mb-4 line-clamp-2">
-                      {product.description || 'Delicious mochi brownie'}
-                    </p>
-                    
+                    <h3 className="text-2xl font-bold text-amber-900 mb-2">{product.name}</h3>
+                    {product.description && (
+                      <p className="text-amber-700/80 mb-4 line-clamp-2">{product.description}</p>
+                    )}
                     <div className="flex items-center justify-between">
-                      {product.price !== null && product.price > 0 ? (
+                      {product.price !== null ? (
                         <>
                           <span className="text-2xl font-bold text-amber-900">
                             ₱{product.price.toFixed(2)}
@@ -315,21 +391,155 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative py-16 sm:py-20 lg:py-28 overflow-hidden" style={{ background: 'linear-gradient(to right, #fef3c7, #fed7aa)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="space-y-6">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900">
-              Ready to Experience Fluffy Comfort?
+      <section id="faq" className="py-12 sm:py-16 lg:py-24 bg-white/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-4">
+              Frequently Asked Questions
             </h2>
-            <p className="text-black-50 text-lg mb-8 max-w-2xl mx-auto">
-              Order now and experience the perfect blend of soft chewy mochi and rich brownie goodness
+            <p className="text-lg text-amber-700/80">
+              Everything you need to know about FluffyChoo
             </p>
-            <Link 
-              href="#products"
-              className="inline-block px-8 py-4 bg-white text-amber-900 text-lg font-semibold rounded-full hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              View Menu
-            </Link>
+          </div>
+
+          <div className="space-y-4">
+            {faqData.map((faq, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl border border-amber-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                <button
+                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-amber-50/50 transition-colors"
+                >
+                  <span className="text-lg font-semibold text-amber-900 pr-4">
+                    {faq.question}
+                  </span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-amber-600 flex-shrink-0 transition-transform duration-300 ${
+                      openFaqIndex === index ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openFaqIndex === index ? 'max-h-96' : 'max-h-0'
+                  }`}
+                >
+                  <div className="px-6 pb-5 text-amber-800/80 leading-relaxed">
+                    {faq.answer}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="feedback" className="py-12 sm:py-16 lg:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-4">
+              We&apos;d Love to Hear From You
+            </h2>
+            <p className="text-lg text-amber-700/80">
+              Share your thoughts, suggestions, or let us know how we can make your FluffyChoo experience even better
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 lg:p-12">
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 bg-amber-50 rounded-lg">
+                <MessageSquare className="w-8 h-8 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-amber-900">Share your feedback</h3>
+                <p className="text-sm text-amber-700">We&apos;d love to hear from you.</p>
+              </div>
+            </div>
+
+            {feedbackSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Send className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-900 mb-2">Thank You!</h3>
+                <p className="text-amber-700">Your feedback has been submitted successfully.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleFeedbackSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-base font-semibold text-amber-900 mb-3">
+                      Name <span className="text-amber-500">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={feedbackForm.name}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
+                      className="w-full px-5 py-3 text-base border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-amber-900"
+                      placeholder="Your name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-base font-semibold text-amber-900 mb-3">
+                      Email <span className="text-amber-500">(optional)</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={feedbackForm.email}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
+                      className="w-full px-5 py-3 text-base border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-amber-900"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-base font-semibold text-amber-900 mb-3">
+                    Subject <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={feedbackForm.title}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, title: e.target.value })}
+                    className="w-full px-5 py-3 text-base border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-amber-900"
+                    placeholder="What's your feedback about?"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base font-semibold text-amber-900 mb-3">
+                    Your Feedback <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={feedbackForm.suggestion}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, suggestion: e.target.value })}
+                    className="w-full px-5 py-3 text-base border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-48 text-amber-900"
+                    placeholder="Share your thoughts, suggestions, or concerns..."
+                    required
+                  />
+                </div>
+
+                {feedbackError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-base">
+                    {feedbackError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingFeedback}
+                  className="w-full px-6 py-4 text-lg text-amber-900 font-semibold rounded-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+                >
+                  <Send className="w-5 h-5" />
+                  <span>{isSubmittingFeedback ? 'Sending...' : 'Submit Feedback'}</span>
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>
@@ -359,15 +569,8 @@ export default function Home() {
               <ul className="space-y-2 text-amber-200 text-sm">
                 <li><Link href="#products" className="hover:text-white transition-colors">Products</Link></li>
                 <li><Link href="#about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li>
-                  <button 
-                    onClick={() => setIsFeedbackOpen(true)}
-                    className="hover:text-white transition-colors flex items-center gap-2"
-                  >
-                    
-                    Share Feedback
-                  </button>
-                </li>
+                <li><Link href="#faq" className="hover:text-white transition-colors">FAQs</Link></li>
+                <li><Link href="#feedback" className="hover:text-white transition-colors">Share Feedback</Link></li>
                 <li><Link href="admin/login" className="hover:text-white transition-colors">Fluffychoo</Link></li>
               </ul>
             </div>
@@ -434,11 +637,6 @@ export default function Home() {
           setSelectedProduct('');
         }}
         selectedProduct={selectedProduct}
-      />
-
-      <FeedbackModal
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
       />
     </div>
   );

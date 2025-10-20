@@ -16,6 +16,13 @@ const nextConfig = {
       },
     ],
   },
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
+  },
 };
 
 export default nextConfig;

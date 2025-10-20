@@ -1,5 +1,7 @@
 // HOTFIX for src/app/api/products/route.ts
 // Replace the entire file content with this:
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';

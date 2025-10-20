@@ -1,12 +1,10 @@
 {
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 10,
-      "memory": 1024
+      "maxDuration": 10
     },
     "src/app/api/orders/route.ts": {
-      "maxDuration": 30,
-      "memory": 1024
+      "maxDuration": 30
     }
   }
 }

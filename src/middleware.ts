@@ -1,6 +1,29 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken } from './lib/admin-auth';
+import { jwtVerify } from 'jose';
+
+// Inline JWT verification to keep middleware small
+const SECRET_KEY = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
+);
+
+async function verifyTokenInline(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, SECRET_KEY);
+    
+    if (payload.type !== 'admin') {
+      return null;
+    }
+
+    return {
+      id: payload.id as string,
+      email: payload.email as string,
+      name: payload.name as string,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,14 +35,9 @@ export default async function middleware(request: NextRequest) {
       // If already logged in, redirect to dashboard
       const token = request.cookies.get('admin_token')?.value;
       if (token) {
-        try {
-          const user = await verifyToken(token);
-          if (user) {
-            return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-          }
-        } catch (error) {
-          // Invalid token, continue to login
-          console.error('Token verification error:', error);
+        const user = await verifyTokenInline(token);
+        if (user) {
+          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
         }
       }
       return NextResponse.next();
@@ -33,17 +51,9 @@ export default async function middleware(request: NextRequest) {
     }
 
     // Verify token
-    try {
-      const user = await verifyToken(token);
-      if (!user) {
-        // Invalid token, clear it and redirect
-        const response = NextResponse.redirect(new URL('/admin/login', request.url));
-        response.cookies.delete('admin_token');
-        return response;
-      }
-    } catch (error) {
-      // Token verification failed
-      console.error('Token verification error:', error);
+    const user = await verifyTokenInline(token);
+    if (!user) {
+      // Invalid token, clear it and redirect
       const response = NextResponse.redirect(new URL('/admin/login', request.url));
       response.cookies.delete('admin_token');
       return response;

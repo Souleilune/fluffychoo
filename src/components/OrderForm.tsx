@@ -894,6 +894,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     </label>
                   ) : (
                     <div className="relative border-2 border-amber-300 rounded-xl overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={paymentProofPreview}
                         alt="Payment proof preview"

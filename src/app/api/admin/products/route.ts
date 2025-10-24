@@ -1,13 +1,13 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 interface ProductUpdateData {
   name?: string;
   price?: number | null;
+  discount_price?: number | null;
   description?: string | null;
   image?: string | null;
   is_active?: boolean;
@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received POST body:', JSON.stringify(body, null, 2));
     
-    // BULLETPROOF: Extract and validate fields with extreme caution
     const name = body?.name;
     const price = body?.price;
+    const discount_price = body?.discount_price;
     const description = body?.description;
     const image = body?.image;
     const is_active = body?.is_active;
@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
     console.log('Field analysis:', {
       name: { value: name, type: typeof name, isNull: name === null, isUndefined: name === undefined },
       price: { value: price, type: typeof price },
+      discount_price: { value: discount_price, type: typeof discount_price },
       description: { value: description, type: typeof description },
       image: { value: image, type: typeof image },
       is_active: { value: is_active, type: typeof is_active },
     });
 
-    // BULLETPROOF: Name validation
     if (name === null || name === undefined) {
       console.error('VALIDATION FAILED: name is null or undefined');
       return NextResponse.json(
@@ -92,7 +92,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // BULLETPROOF: Get display_order
     const { data: maxOrderData } = await supabaseAdmin
       .from('products')
       .select('display_order')
@@ -101,7 +100,6 @@ export async function POST(request: NextRequest) {
 
     const nextOrder = (maxOrderData && maxOrderData[0]?.display_order || 0) + 1;
 
-    // BULLETPROOF: Process other fields safely
     let processedPrice = null;
     if (price !== null && price !== undefined && price !== '') {
       if (typeof price === 'string' && price.trim() !== '') {
@@ -111,6 +109,18 @@ export async function POST(request: NextRequest) {
         }
       } else if (typeof price === 'number' && !isNaN(price) && price >= 0) {
         processedPrice = price;
+      }
+    }
+
+    let processedDiscountPrice = null;
+    if (discount_price !== null && discount_price !== undefined && discount_price !== '') {
+      if (typeof discount_price === 'string' && discount_price.trim() !== '') {
+        const numDiscountPrice = parseFloat(discount_price.trim());
+        if (!isNaN(numDiscountPrice) && numDiscountPrice >= 0) {
+          processedDiscountPrice = numDiscountPrice;
+        }
+      } else if (typeof discount_price === 'number' && !isNaN(discount_price) && discount_price >= 0) {
+        processedDiscountPrice = discount_price;
       }
     }
 
@@ -130,11 +140,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-
-    // BULLETPROOF: Final product data
     const productData = {
-      name: trimmedName, // We know this is safe now
+      name: trimmedName,
       price: processedPrice,
+      discount_price: processedDiscountPrice,
       description: processedDescription,
       image: processedImage,
       is_active: is_active === true || is_active === 'true',
@@ -143,16 +152,14 @@ export async function POST(request: NextRequest) {
 
     console.log('FINAL PRODUCT DATA:', JSON.stringify(productData, null, 2));
 
-    // BULLETPROOF: Final validation before insert
     if (!productData.name || productData.name === '') {
       console.error('CRITICAL ERROR: Final product data has empty name!');
       return NextResponse.json(
-        { error: 'Critical error: product name is empty in final data' },
-        { status: 500 }
+        { error: 'Product name became empty after processing' },
+        { status: 400 }
       );
     }
 
-    console.log('Attempting database insert...');
     const { data, error } = await supabaseAdmin
       .from('products')
       .insert([productData])
@@ -160,22 +167,21 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Supabase error:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Supabase insert error:', error);
       return NextResponse.json(
         { error: 'Failed to create product: ' + error.message },
         { status: 500 }
       );
     }
 
-    console.log('SUCCESS: Product created:', data);
+    console.log('Product created successfully:', data);
+
     return NextResponse.json({
       success: true,
       data,
-    }, { status: 201 });
+    });
   } catch (error) {
     console.error('API error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       { error: 'Internal server error: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
@@ -183,13 +189,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-
 // PATCH /api/admin/products - Update product
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received PATCH body:', body);
-    
     const { id, ...updateFields } = body;
 
     if (!id) {
@@ -199,12 +202,13 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Process update data with proper typing
+    console.log('Updating product:', id, 'with fields:', updateFields);
+
     const updateData: ProductUpdateData = {};
 
     if (updateFields.name !== undefined) {
       const name = updateFields.name?.trim();
-      if (!name) {
+      if (!name || name === '') {
         return NextResponse.json(
           { error: 'Product name cannot be empty' },
           { status: 400 }
@@ -216,6 +220,11 @@ export async function PATCH(request: NextRequest) {
     if (updateFields.price !== undefined) {
       const price = updateFields.price?.trim();
       updateData.price = price && price !== '' ? parseFloat(price) : null;
+    }
+
+    if (updateFields.discount_price !== undefined) {
+      const discount_price = updateFields.discount_price?.trim();
+      updateData.discount_price = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
     }
 
     if (updateFields.description !== undefined) {
@@ -267,6 +276,7 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
 // DELETE /api/admin/products - Delete product
 export async function DELETE(request: NextRequest) {
   try {

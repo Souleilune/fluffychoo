@@ -10,6 +10,7 @@ interface Product {
   id: string;
   name: string;
   price: number | null;
+  discount_price?: number | null;  // ADD THIS LINE
   description: string | null;
   image: string | null;
   stock: number;
@@ -325,11 +326,20 @@ export default function Home() {
                       <p className="text-amber-700/80 mb-4 line-clamp-2">{product.description}</p>
                     )}
                     <div className="flex items-center justify-between">
-                      {product.price !== null ? (
-                        <>
-                          <span className="text-2xl font-bold text-amber-900">
-                            ₱{product.price.toFixed(2)}
-                          </span>
+                     {product.discount_price !== null && product.discount_price !== undefined ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500 line-through">
+                          ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
+                        </span>
+                        <span className="text-3xl font-bold text-amber-900">
+                          ₱{product.discount_price.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : product.price !== null ? (
+                      <>
+                        <span className="text-2xl font-bold text-amber-900">
+                          ₱{product.price.toFixed(2)}
+                        </span>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -692,7 +702,16 @@ export default function Home() {
         <div className="space-y-4">
           {/* Price and Stock */}
           <div className="flex items-center justify-between">
-            {selectedProductDetail.price !== null ? (
+            {selectedProductDetail.discount_price !== null && selectedProductDetail.discount_price !== undefined ? (
+              <div className="flex flex-col">
+                <span className="text-lg text-gray-500 line-through">
+                  ₱{selectedProductDetail.price !== null ? selectedProductDetail.price.toFixed(2) : '0.00'}
+                </span>
+                <span className="text-3xl font-bold text-amber-900">
+                  ₱{selectedProductDetail.discount_price.toFixed(2)}
+                </span>
+              </div>
+            ) : selectedProductDetail.price !== null ? (
               <span className="text-3xl font-bold text-amber-900">
                 ₱{selectedProductDetail.price.toFixed(2)}
               </span>

@@ -699,7 +699,7 @@ export default function Home() {
             ) : (
               <span className="text-2xl font-semibold text-amber-600">Price TBD</span>
             )}
-            <span className="text-lg text-amber-700">Stock: {selectedProductDetail.stock}</span>
+            
           </div>
           
           {/* Full Description */}

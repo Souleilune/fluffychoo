@@ -25,6 +25,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  discount_price?: number | null;
   description: string | null;
   image: string | null;
   stock: number;
@@ -35,6 +36,7 @@ interface OrderItem {
   productId: string;
   productName: string;
   price: number;
+  discount_price?: number | null;
   quantity: number;
 }
 
@@ -197,32 +199,31 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   };
 
   const handleAddProduct = () => {
-    if (!selectedProductId || selectedQuantity < 1) {
-      alert('Please select a product and quantity');
-      return;
-    }
+  const product = products.find(p => p.id === selectedProductId);
+  if (!product) return;
 
-    const product = products.find(p => p.id === selectedProductId);
-    if (!product) return;
+  // Check if product already exists in order items
+  const existingItemIndex = orderItems.findIndex(item => item.productId === product.id);
+  
+  if (existingItemIndex !== -1) {
+    // Product exists, update quantity
+    const updatedItems = [...orderItems];
+    updatedItems[existingItemIndex].quantity += selectedQuantity;
+    setOrderItems(updatedItems);
+  } else {
+    // Product doesn't exist, add new item
+    setOrderItems([...orderItems, {
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      discount_price: product.discount_price,
+      quantity: selectedQuantity,
+    }]);
+  }
 
-    const existingIndex = orderItems.findIndex(item => item.productId === selectedProductId);
-    
-    if (existingIndex >= 0) {
-      const newItems = [...orderItems];
-      newItems[existingIndex].quantity += selectedQuantity;
-      setOrderItems(newItems);
-    } else {
-      setOrderItems([...orderItems, {
-        productId: product.id,
-        productName: product.name,
-        price: product.price,
-        quantity: selectedQuantity,
-      }]);
-    }
-
-    setSelectedProductId('');
-    setSelectedQuantity(1);
-  };
+  setSelectedProductId('');
+  setSelectedQuantity(1);
+};
 
   const handleRemoveProduct = (productId: string) => {
     setOrderItems(orderItems.filter(item => item.productId !== productId));
@@ -662,7 +663,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
             {currentStep === 2 && (
               <div className="space-y-4">
-                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Review Your Order</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-amber-900 mb-4">Place Your Order</h3>
                 
                 {isLoadingProducts ? (
                   <div className="flex flex-col items-center justify-center py-8">
@@ -701,7 +702,9 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                           <option value="">Choose a product...</option>
                           {products.map(product => (
                             <option key={product.id} value={product.id}>
-                              {product.name} - ₱{product.price.toFixed(2)}
+                              {product.name} - {product.discount_price !== null && product.discount_price !== undefined 
+                                ? `₱${product.discount_price.toFixed(2)} (was ₱${product.price.toFixed(2)})`
+                                : `₱${product.price.toFixed(2)}`}
                             </option>
                           ))}
                         </select>
@@ -735,34 +738,35 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
                     {orderItems.length > 0 && (
                       <div className="space-y-3 mt-6">
-                        <h4 className="font-semibold text-amber-900">Your Order</h4>
+                        <h4 className="font-semibold text-amber-900">Review Your Order</h4>
                         <div className="space-y-2">
                           {orderItems.map((item) => (
                             <div key={item.productId} className="bg-amber-50 rounded-xl p-4 border border-amber-200">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="font-medium text-amber-900">{item.productName}</span>
+                                <span className="font-semibold text-amber-900">{item.productName}</span>
                                 <button
                                   onClick={() => handleRemoveProduct(item.productId)}
-                                  className="p-1 hover:bg-red-50 rounded transition-colors"
-                                  aria-label="Remove item"
+                                  className="text-red-500 hover:text-red-700"
                                 >
-                                  <Trash2 className="w-4 h-4 text-red-500" />
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-amber-700">Qty:</span>
-                                  <input
-                                    type="number"
-                                    value={item.quantity}
-                                    onChange={(e) => handleUpdateQuantity(item.productId, parseInt(e.target.value) || 1)}
-                                    min="1"
-                                    className="w-16 px-2 py-1 border border-amber-200 rounded text-center"
-                                  />
+                              <div className="flex items-center justify-between text-sm text-amber-700">
+                                <span>Quantity: {item.quantity}</span>
+                                <div className="flex flex-col items-end">
+                                  {item.discount_price !== null && item.discount_price !== undefined ? (
+                                    <>
+                                      <span className="text-xs text-gray-500 line-through">
+                                        ₱{(item.price * item.quantity).toFixed(2)}
+                                      </span>
+                                      <span className="font-semibold text-amber-900">
+                                        ₱{(item.discount_price * item.quantity).toFixed(2)}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="font-semibold">₱{(item.price * item.quantity).toFixed(2)}</span>
+                                  )}
                                 </div>
-                                <span className="font-medium text-amber-900">
-                                  ₱{(item.price * item.quantity).toFixed(2)}
-                                </span>
                               </div>
                             </div>
                           ))}
@@ -774,10 +778,17 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                             <span className="text-amber-900">{orderItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
                           </div>
                           <div className="border-t border-amber-300 pt-2 mt-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-amber-900 font-bold text-lg">Total:</span>
-                              <span className="text-amber-900 font-bold text-lg">₱{totalPrice.toFixed(2)}</span>
-                            </div>
+                           <div className="flex items-center justify-between text-lg font-bold text-amber-900 pt-3 border-t border-amber-200">
+                            <span>Total:</span>
+                            <span>
+                              ₱{orderItems.reduce((sum, item) => {
+                                const effectivePrice = item.discount_price !== null && item.discount_price !== undefined 
+                                  ? item.discount_price 
+                                  : item.price;
+                                return sum + (effectivePrice * item.quantity);
+                              }, 0).toFixed(2)}
+                            </span>
+                          </div>
                           </div>
                         </div>
                       </div>

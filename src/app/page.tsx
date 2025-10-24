@@ -320,54 +320,71 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold text-amber-900 mb-2">{product.name}</h3>
-                    {product.description && (
-                      <p className="text-amber-700/80 mb-4 line-clamp-2">{product.description}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                     {product.discount_price !== null && product.discount_price !== undefined ? (
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-500 line-through">
-                          ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
-                        </span>
-                        <span className="text-3xl font-bold text-amber-900">
-                          ₱{product.discount_price.toFixed(2)}
-                        </span>
-                      </div>
-                    ) : product.price !== null ? (
-                      <>
-                        <span className="text-2xl font-bold text-amber-900">
-                          ₱{product.price.toFixed(2)}
-                        </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOrderClick(product.name);
-                            }}
-                            disabled={!isOrderFormEnabled || isCheckingAvailability}
-                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
-                          >
-                            {isCheckingAvailability ? (
-                              <Clock className="w-4 h-4" />
-                            ) : (
-                              'Order Now'
-                            )}
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-2xl font-bold text-amber-900">
-                            Price TBD
-                          </span>
-                          <span className="px-4 py-2 bg-gray-100 text-gray-500 font-semibold rounded-xl cursor-not-allowed">
-                            Coming Soon
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                 <div className="p-6">
+  <h3 className="text-2xl font-bold text-amber-900 mb-2">{product.name}</h3>
+  {product.description && (
+    <p className="text-amber-700/80 mb-4 line-clamp-2">{product.description}</p>
+  )}
+  <div className="flex items-center justify-between">
+    {product.discount_price !== null && product.discount_price !== undefined ? (
+      <>
+        <div className="flex flex-col">
+          <span className="text-sm text-gray-500 line-through">
+            ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
+          </span>
+          <span className="text-3xl font-bold text-amber-900">
+            ₱{product.discount_price.toFixed(2)}
+          </span>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOrderClick(product.name);
+          }}
+          disabled={!isOrderFormEnabled || isCheckingAvailability}
+          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+        >
+          {isCheckingAvailability ? (
+            <Clock className="w-4 h-4" />
+          ) : (
+            'Order Now'
+          )}
+        </button>
+      </>
+    ) : product.price !== null ? (
+      <>
+        <span className="text-2xl font-bold text-amber-900">
+          ₱{product.price.toFixed(2)}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOrderClick(product.name);
+          }}
+          disabled={!isOrderFormEnabled || isCheckingAvailability}
+          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+        >
+          {isCheckingAvailability ? (
+            <Clock className="w-4 h-4" />
+          ) : (
+            'Order Now'
+          )}
+        </button>
+      </>
+    ) : (
+      <>
+        <span className="text-2xl font-bold text-amber-900">
+          Price TBD
+        </span>
+        <span className="px-4 py-2 bg-gray-100 text-gray-500 font-semibold rounded-xl cursor-not-allowed">
+          Coming Soon
+        </span>
+      </>
+    )}
+  </div>
+</div>
                 </div>
               ))}
             </div>

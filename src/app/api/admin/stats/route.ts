@@ -54,16 +54,16 @@ export async function GET() {
     }, {});
 
     // Get revenue (sum of all completed orders)
-    const { data: completedOrdersData } = await supabaseAdmin
-      .from('orders')
-      .select('quantity, order')
-      .eq('status', 'completed');
+    // Get revenue (sum of all completed orders)
+      const { data: completedOrdersData } = await supabaseAdmin
+        .from('orders')
+        .select('total_amount')
+        .eq('status', 'completed');
 
-    // Calculate total revenue (this is approximate - you might want to add price to orders table)
-    const totalRevenue = completedOrdersData?.reduce((sum, order) => {
-      // Assuming average price of $2.99 per item
-      return sum + (order.quantity * 2.99);
-    }, 0) || 0;
+      // Calculate total revenue from stored total_amount
+      const totalRevenue = completedOrdersData?.reduce((sum: number, order: { total_amount: number | null }) => {
+        return sum + (Number(order.total_amount) || 0);
+      }, 0) || 0;
 
     return NextResponse.json({
       success: true,

@@ -60,6 +60,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   
   const [deliveryPolicyAccepted, setDeliveryPolicyAccepted] = useState(false);
   const [courierCheckbox, setCourierCheckbox] = useState(false);
@@ -397,6 +398,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
           contactNumber: formData.contactNumber,
           order: orderString,
           quantity: totalQuantity,
+          orderItems: orderItems,
           paymentProofUrl,
           termsAccepted: true,
           captchaToken,
@@ -444,7 +446,12 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     }
   };
 
-  const totalPrice = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = orderItems.reduce((sum, item) => {
+  const effectivePrice = item.discount_price !== null && item.discount_price !== undefined 
+    ? item.discount_price 
+    : item.price;
+  return sum + (effectivePrice * item.quantity);
+}, 0);
 
   if (!isOpen) return null;
 
@@ -693,21 +700,52 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                         <label htmlFor="product" className="block text-sm font-medium text-amber-900 mb-1">
                           Select Product
                         </label>
-                        <select
-                          id="product"
-                          value={selectedProductId}
-                          onChange={(e) => setSelectedProductId(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white"
-                        >
-                          <option value="">Choose a product...</option>
-                          {products.map(product => (
-                            <option key={product.id} value={product.id}>
-                              {product.name} - {product.discount_price !== null && product.discount_price !== undefined 
-                                ? `₱${product.discount_price.toFixed(2)} (was ₱${product.price.toFixed(2)})`
-                                : `₱${product.price.toFixed(2)}`}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+  <div
+    onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
+    className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white cursor-pointer flex items-center justify-between"
+  >
+    <span className="text-amber-900">
+      {selectedProductId 
+        ? products.find(p => p.id === selectedProductId)?.name || 'Choose a product...'
+        : 'Choose a product...'}
+    </span>
+    <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${isProductDropdownOpen ? 'rotate-90' : ''}`} />
+  </div>
+  
+  {isProductDropdownOpen && (
+    <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+      {products.map(product => (
+        <div
+          key={product.id}
+          onClick={() => {
+            setSelectedProductId(product.id);
+            setIsProductDropdownOpen(false);
+          }}
+          className="px-4 py-3 hover:bg-amber-50 cursor-pointer transition-colors border-b border-amber-100 last:border-b-0"
+        >
+          <div className="font-semibold text-amber-900">{product.name}</div>
+          <div className="flex items-center gap-2 mt-1">
+            {product.discount_price !== null && product.discount_price !== undefined ? (
+              <>
+                <span className="text-xs text-gray-500 line-through">
+                  ₱{product.price.toFixed(2)}
+                </span>
+                <span className="text-sm font-bold text-amber-900">
+                  ₱{product.discount_price.toFixed(2)}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm font-semibold text-amber-900">
+                ₱{product.price.toFixed(2)}
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
                       </div>
 
                       <div>

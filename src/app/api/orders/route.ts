@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     
     // Validate required fields
     const { name, location, contactNumber, order, quantity, termsAccepted, captchaToken } = body;
+    const { orderItems } = body;
     
     if (!name || !location || !contactNumber || !order || !quantity) {
       return NextResponse.json(
@@ -66,7 +67,16 @@ export async function POST(request: NextRequest) {
 
     // Generate unique order reference
     const orderReference = generateOrderReference();
-
+    
+    let totalAmount = 0;
+    if (orderItems && Array.isArray(orderItems)) {
+      totalAmount = orderItems.reduce((sum, item) => {
+        const effectivePrice = item.discount_price !== null && item.discount_price !== undefined 
+          ? item.discount_price 
+          : item.price;
+        return sum + (effectivePrice * item.quantity);
+      }, 0);
+    }
     // Insert order into Supabase using admin client (bypasses RLS)
     const { data, error } = await supabaseAdmin
       .from('orders')
@@ -78,6 +88,7 @@ export async function POST(request: NextRequest) {
           contact_number: contactNumber,
           order,
           quantity,
+          total_amount: totalAmount,
           status: 'pending',
           payment_proof_url: body.paymentProofUrl || null,
           terms_accepted: termsAccepted,

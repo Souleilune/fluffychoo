@@ -10,7 +10,6 @@ interface ProductUpdateData {
   price?: number | null;
   description?: string | null;
   image?: string | null;
-  stock?: number;
   is_active?: boolean;
   display_order?: number;
   updated_at?: string;
@@ -57,7 +56,6 @@ export async function POST(request: NextRequest) {
     const price = body?.price;
     const description = body?.description;
     const image = body?.image;
-    const stock = body?.stock;
     const is_active = body?.is_active;
 
     console.log('Field analysis:', {
@@ -65,7 +63,6 @@ export async function POST(request: NextRequest) {
       price: { value: price, type: typeof price },
       description: { value: description, type: typeof description },
       image: { value: image, type: typeof image },
-      stock: { value: stock, type: typeof stock },
       is_active: { value: is_active, type: typeof is_active },
     });
 
@@ -133,13 +130,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let processedStock = 0;
-    if (stock !== null && stock !== undefined) {
-      const numStock = typeof stock === 'string' ? parseInt(stock) : stock;
-      if (!isNaN(numStock) && numStock >= 0) {
-        processedStock = numStock;
-      }
-    }
 
     // BULLETPROOF: Final product data
     const productData = {
@@ -147,7 +137,6 @@ export async function POST(request: NextRequest) {
       price: processedPrice,
       description: processedDescription,
       image: processedImage,
-      stock: processedStock,
       is_active: is_active === true || is_active === 'true',
       display_order: nextOrder,
     };
@@ -237,10 +226,6 @@ export async function PATCH(request: NextRequest) {
     if (updateFields.image !== undefined) {
       const image = updateFields.image?.trim();
       updateData.image = image && image !== '' ? image : null;
-    }
-
-    if (updateFields.stock !== undefined) {
-      updateData.stock = parseInt(updateFields.stock) || 0;
     }
 
     if (updateFields.is_active !== undefined) {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf, ChevronDown, MessageSquare, Send } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf, ChevronDown, MessageSquare, Send, X } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 
 interface Product {
@@ -71,6 +71,8 @@ export default function Home() {
   const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
   const [feedbackForm, setFeedbackForm] = useState({
     name: '',
@@ -121,6 +123,11 @@ export default function Home() {
   const handleOrderClick = (productName: string) => {
     setSelectedProduct(productName);
     setIsOrderFormOpen(true);
+  };
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProductDetail(product);
+    setIsDetailModalOpen(true);
   };
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
@@ -293,7 +300,11 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {products.filter(p => p.is_active).map((product) => (
-                <div key={product.id} className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <div 
+                  key={product.id} 
+                  onClick={() => handleProductClick(product)}
+                  className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
+                >
                   <div className="relative h-64 overflow-hidden">
                     {product.image ? (
                       <Image
@@ -320,7 +331,10 @@ export default function Home() {
                             ₱{product.price.toFixed(2)}
                           </span>
                           <button
-                            onClick={() => handleOrderClick(product.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOrderClick(product.name);
+                            }}
                             disabled={!isOrderFormEnabled || isCheckingAvailability}
                             className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
@@ -350,6 +364,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      
 
       <section id="about" className="py-12 sm:py-16 lg:py-24 bg-white/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -638,6 +653,104 @@ export default function Home() {
         }}
         selectedProduct={selectedProduct}
       />
+      {/* Product Detail Modal */}
+{isDetailModalOpen && selectedProductDetail && (
+  <div 
+    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" 
+    onClick={() => setIsDetailModalOpen(false)}
+  >
+    <div 
+      className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" 
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Modal Header */}
+      <div className="p-6 border-b border-amber-100 flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-amber-900">{selectedProductDetail.name}</h2>
+        <button
+          onClick={() => setIsDetailModalOpen(false)}
+          className="text-amber-600 hover:text-amber-800 transition-colors"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      
+      {/* Modal Body */}
+      <div className="p-6 space-y-6">
+        {/* Product Image */}
+        {selectedProductDetail.image && (
+          <div className="relative h-80 rounded-2xl overflow-hidden">
+            <Image
+              src={selectedProductDetail.image}
+              alt={selectedProductDetail.name}
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
+        
+        {/* Product Details */}
+        <div className="space-y-4">
+          {/* Price and Stock */}
+          <div className="flex items-center justify-between">
+            {selectedProductDetail.price !== null ? (
+              <span className="text-3xl font-bold text-amber-900">
+                ₱{selectedProductDetail.price.toFixed(2)}
+              </span>
+            ) : (
+              <span className="text-2xl font-semibold text-amber-600">Price TBD</span>
+            )}
+            <span className="text-lg text-amber-700">Stock: {selectedProductDetail.stock}</span>
+          </div>
+          
+          {/* Full Description */}
+          {selectedProductDetail.description && (
+            <div>
+              <h3 className="text-lg font-semibold text-amber-900 mb-2">Description</h3>
+              <p className="text-amber-700/80 leading-relaxed whitespace-pre-wrap">
+                {selectedProductDetail.description}
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* Order Button */}
+        <div className="pt-4 border-t border-amber-100">
+          <button
+            onClick={() => {
+              setIsDetailModalOpen(false);
+              handleOrderClick(selectedProductDetail.name);
+            }}
+            disabled={!isOrderFormEnabled || isCheckingAvailability}
+            className={`w-full px-6 py-3 text-amber-900 font-semibold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
+              isOrderFormEnabled && !isCheckingAvailability
+                ? 'hover:shadow-lg transform hover:scale-105'
+                : 'cursor-not-allowed opacity-60'
+            }`}
+            style={isOrderFormEnabled && !isCheckingAvailability 
+              ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } 
+              : { background: '#f3f4f6' }
+            }
+          >
+            {isCheckingAvailability ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Checking...</span>
+              </>
+            ) : isOrderFormEnabled ? (
+              <span>Order Now</span>
+            ) : (
+              <>
+                <Clock className="w-4 h-4" />
+                <span>Unavailable</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
+)}
+    </div>
+    
   );
 }

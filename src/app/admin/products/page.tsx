@@ -33,7 +33,6 @@ export default function AdminProductsPage() {
     price: '',
     description: '',
     image: '',
-    stock: '0',
     is_active: true,
   });
 
@@ -66,7 +65,6 @@ export default function AdminProductsPage() {
       price: '',
       description: '',
       image: '',
-      stock: '0',
       is_active: true,
     });
     setIsModalOpen(true);
@@ -81,7 +79,6 @@ export default function AdminProductsPage() {
       price: product.price?.toString() || '', // Safe conversion
       description: product.description || '', // Handle null
       image: product.image || '', // Handle null
-      stock: product.stock?.toString() || '0', // Safe conversion
       is_active: product.is_active !== undefined ? product.is_active : true,
     });
     setIsModalOpen(true);
@@ -163,19 +160,18 @@ export default function AdminProductsPage() {
 
     // FIXED: Safe payload creation with proper null checks
     const payload = {
-      name: formData.name.trim(), // We already validated this above
-      price: (formData.price && typeof formData.price === 'string' && formData.price.trim() !== '') 
-        ? formData.price.trim() 
-        : '',
-      description: (formData.description && typeof formData.description === 'string' && formData.description.trim() !== '') 
-        ? formData.description.trim() 
-        : '',
-      image: (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') 
-        ? imageUrl.trim() 
-        : '',
-      stock: formData.stock || '0',
-      is_active: formData.is_active,
-    };
+     name: formData.name.trim(),
+     price: (formData.price && formData.price.trim() !== '') 
+       ? formData.price.trim() 
+       : '',
+     description: (formData.description && formData.description.trim() !== '') 
+       ? formData.description.trim() 
+       : '',
+     image: (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') 
+       ? imageUrl.trim() 
+       : '',
+     is_active: formData.is_active,
+   };
 
     console.log('Payload being sent:', payload);
 
@@ -401,7 +397,7 @@ export default function AdminProductsPage() {
                     <span className="text-2xl font-bold text-amber-900">
                       {product.price !== null && product.price !== undefined ? `$${product.price.toFixed(2)}` : 'Price TBD'}
                     </span>
-                    <span className="text-sm text-amber-600">Stock: {product.stock}</span>
+                    
                   </div>
 
                   {/* Action Buttons */}
@@ -543,19 +539,7 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Stock */}
-              <div>
-                <label className="block text-sm font-medium text-amber-900 mb-2">
-                  Stock Quantity
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
+              
 
               {/* Active Status */}
               <div>

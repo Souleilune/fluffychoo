@@ -228,21 +228,15 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     setOrderItems(orderItems.filter(item => item.productId !== productId));
   };
 
-  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    
-    const product = products.find(p => p.id === productId);
-    if (product && newQuantity > product.stock) {
-      alert(`Only ${product.stock} items available in stock`);
-      return;
-    }
+ const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+     if (newQuantity < 1) return;
 
-    setOrderItems(orderItems.map(item => 
-      item.productId === productId 
-        ? { ...item, quantity: newQuantity }
-        : item
-    ));
-  };
+     setOrderItems(orderItems.map(item => 
+       item.productId === productId 
+         ? { ...item, quantity: newQuantity }
+         : item
+     ));
+   };
 
   const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -724,14 +718,9 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                           onChange={(e) => setSelectedQuantity(parseInt(e.target.value) || 1)}
                           required
                           min="1"
-                          max={products.find(p => p.id === selectedProductId)?.stock || 100}
                           className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
                         />
-                        {selectedProductId && products.find(p => p.id === selectedProductId) && (
-                          <p className="text-sm text-amber-600 mt-1">
-                            Available stock: {products.find(p => p.id === selectedProductId)!.stock}
-                          </p>
-                        )}
+                        
                       </div>
 
                       <button

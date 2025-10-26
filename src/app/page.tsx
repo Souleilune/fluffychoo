@@ -183,7 +183,7 @@ export default function Home() {
 
             <div className="hidden md:flex items-center space-x-6">
               <Link href="#products" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
-                Products
+                Menu
               </Link>
               <Link href="#about" className="text-amber-900 hover:text-amber-600 font-medium transition-colors">
                 About

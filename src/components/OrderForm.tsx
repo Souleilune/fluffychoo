@@ -48,6 +48,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [isOrderFormEnabled, setIsOrderFormEnabled] = useState(true);
+  const [unavailabilityMessage, setUnavailabilityMessage] = useState<string>('');
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -106,20 +107,40 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   }, [selectedProduct, products]);
 
   const checkOrderFormAvailability = async () => {
-    setIsCheckingAvailability(true);
-    try {
-      const response = await fetch('/api/settings');
-      const data = await response.json();
-      if (data.success) {
-        setIsOrderFormEnabled(data.data.order_form_enabled);
-      }
-    } catch (error) {
-      console.error('Failed to check order form availability:', error);
+  setIsCheckingAvailability(true);
+  try {
+    const response = await fetch('/api/settings/check-availability');
+    
+    // Check if response is OK and is JSON
+    if (!response.ok) {
+      console.error('API returned error:', response.status);
       setIsOrderFormEnabled(true);
-    } finally {
-      setIsCheckingAvailability(false);
+      setUnavailabilityMessage('');
+      return;
     }
-  };
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Response is not JSON');
+      setIsOrderFormEnabled(true);
+      setUnavailabilityMessage('');
+      return;
+    }
+    
+    const data = await response.json();
+    if (data.success && data.data) {
+      const { is_available, message } = data.data;
+      setIsOrderFormEnabled(is_available);
+      setUnavailabilityMessage(message || '');
+    }
+  } catch (error) {
+    console.error('Failed to check order form availability:', error);
+    setIsOrderFormEnabled(true);
+    setUnavailabilityMessage('');
+  } finally {
+    setIsCheckingAvailability(false);
+  }
+};
 
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
@@ -508,7 +529,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   Order Form Currently Disabled
                 </h3>
                 <p className="text-amber-700 text-sm">
-                  We&apos;re temporarily not accepting new orders. Please check back later or contact us directly for assistance.
+                  {unavailabilityMessage || "We're temporarily not accepting new orders. Please check back later or contact us directly for assistance."}
                 </p>
               </div>
               

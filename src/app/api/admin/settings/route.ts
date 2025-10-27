@@ -24,6 +24,10 @@ export async function GET() {
         .insert([{ 
           id: 'app_settings',
           order_form_enabled: true,
+          max_daily_orders: 10,
+          manual_override: false,
+          operating_hours_start: 6,
+          operating_hours_end: 21,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }])
@@ -63,22 +67,65 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { order_form_enabled } = body;
+    const { 
+      order_form_enabled, 
+      max_daily_orders, 
+      operating_hours_start,
+      operating_hours_end 
+    } = body;
 
-    if (typeof order_form_enabled !== 'boolean') {
-      return NextResponse.json(
-        { error: 'order_form_enabled must be a boolean' },
-        { status: 400 }
-      );
+    // Build update object with only provided fields
+    const updateData: Record<string, string | number | boolean> = {
+      updated_at: new Date().toISOString()
+    };
+
+    // Validate and add order_form_enabled
+    // When toggling, we just update the enabled status
+    // The auto-rules (time and count) still apply regardless
+    if (typeof order_form_enabled === 'boolean') {
+      updateData.order_form_enabled = order_form_enabled;
+    }
+
+    // Validate and add max_daily_orders
+    if (max_daily_orders !== undefined) {
+      const maxOrders = parseInt(max_daily_orders);
+      if (isNaN(maxOrders) || maxOrders < 1) {
+        return NextResponse.json(
+          { error: 'max_daily_orders must be a positive number' },
+          { status: 400 }
+        );
+      }
+      updateData.max_daily_orders = maxOrders;
+    }
+
+    // Validate and add operating_hours_start
+    if (operating_hours_start !== undefined) {
+      const startHour = parseInt(operating_hours_start);
+      if (isNaN(startHour) || startHour < 0 || startHour > 23) {
+        return NextResponse.json(
+          { error: 'operating_hours_start must be between 0 and 23' },
+          { status: 400 }
+        );
+      }
+      updateData.operating_hours_start = startHour;
+    }
+
+    // Validate and add operating_hours_end
+    if (operating_hours_end !== undefined) {
+      const endHour = parseInt(operating_hours_end);
+      if (isNaN(endHour) || endHour < 0 || endHour > 23) {
+        return NextResponse.json(
+          { error: 'operating_hours_end must be between 0 and 23' },
+          { status: 400 }
+        );
+      }
+      updateData.operating_hours_end = endHour;
     }
 
     // Update settings
     const { data, error } = await supabaseAdmin
       .from('settings')
-      .update({ 
-        order_form_enabled,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', 'app_settings')
       .select()
       .single();

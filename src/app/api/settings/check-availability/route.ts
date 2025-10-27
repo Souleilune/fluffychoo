@@ -66,7 +66,7 @@ export async function GET() {
         data: {
           is_available: false,
           reason: 'outside_hours',
-          message: `Order form is only available from ${operatingStart}:00 AM to ${operatingEnd}:00 PM (Philippine Time).`,
+          message: `We're all tucked in for the night. The order form reopens again from ${operatingStart}:00 AM to ${operatingEnd}:00 PM (Philippine Time). Message us on our socials if you need assistance.`,
           operating_hours: {
             start: operatingStart,
             end: operatingEnd,

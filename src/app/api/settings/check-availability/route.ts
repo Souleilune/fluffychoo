@@ -25,7 +25,6 @@ export async function GET() {
       });
     }
 
-    // If no settings found, return default
     if (!settings) {
       return NextResponse.json({
         success: true,
@@ -44,7 +43,7 @@ export async function GET() {
         data: {
           is_available: false,
           reason: 'manually_closed',
-          message: 'Order form is temporarily closed.'
+          message: 'We%apos;re not accepting orders at the moment. If you need assistance or have any questions, feel free to reach out to us on our socials.'
         },
       });
     }

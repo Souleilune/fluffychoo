@@ -508,7 +508,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Clock className="w-6 h-6 text-amber-900" />
-                  <h2 className="text-xl font-bold text-amber-900">Orders Temporarily Unavailable</h2>
+                  <h2 className="text-xl font-bold text-amber-900">Oops!</h2>
                 </div>
                 <button
                   onClick={handleClose}

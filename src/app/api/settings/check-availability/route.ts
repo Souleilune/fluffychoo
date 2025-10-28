@@ -43,15 +43,12 @@ export async function GET() {
         data: {
           is_available: false,
           reason: 'manually_closed',
-          message: 'We%apos;re not accepting orders at the moment. If you need assistance or have any questions, feel free to reach out to us on our socials.'
+          message: `We're taking a short pause for now. If you need assistance or have any questions, we’d love to hear from you on our socials.`
         },
       });
     }
 
-    // If form is manually enabled (order_form_enabled = true),
-    // we still check the auto-rules below (time and count)
-    // This way, auto-rules still apply even when admin has toggled ON
-
+   
     // Check operating hours (Philippine Time - UTC+8)
     const now = new Date();
     const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));

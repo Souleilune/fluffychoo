@@ -120,7 +120,7 @@ export default function AdminProductsPage() {
         const uploadFormData = new FormData();
         uploadFormData.append('file', selectedFile);
         
-        const uploadResponse = await fetch('/api/upload', {
+        const uploadResponse = await fetch('/api/admin/upload', {
           method: 'POST',
           body: uploadFormData,
         });

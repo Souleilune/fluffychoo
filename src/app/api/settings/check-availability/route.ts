@@ -4,6 +4,13 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+
+function formatTime(hour: number): string {
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:00 ${period}`;
+}
+
 // GET /api/settings/check-availability - Check if order form should be available
 export async function GET() {
   try {
@@ -43,7 +50,7 @@ export async function GET() {
         data: {
           is_available: false,
           reason: 'manually_closed',
-          message: `We're taking a short pause for now. If you need assistance or have any questions, we’d love to hear from you on our socials.`
+          message: `We're taking a short pause for now. If you need assistance or have any questions, we'd love to hear from you on our socials.`
         },
       });
     }
@@ -63,7 +70,7 @@ export async function GET() {
         data: {
           is_available: false,
           reason: 'outside_hours',
-          message: `We're all tucked in for the night. The order form reopens again from ${operatingStart}:00 AM to ${operatingEnd}:00 PM (Philippine Time). Message us on our socials if you need assistance.`,
+          message: `We're all tucked in for the night. The order form reopens again from ${formatTime(operatingStart)} to ${formatTime(operatingEnd)} (Philippine Time). Message us on our socials if you need assistance.`,
           operating_hours: {
             start: operatingStart,
             end: operatingEnd,

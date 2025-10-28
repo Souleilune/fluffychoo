@@ -686,7 +686,11 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     placeholder="juan@example.com"
                   />
                 </div>
+                <div className="text-sm text-amber-700 italic mt-2">
+                  In compliance with the Data Privacy Act of 2012, all personal information you provide will be kept confidential and used solely for order processing.
+                </div>
               </div>
+              
             )}
 
             {currentStep === 2 && (

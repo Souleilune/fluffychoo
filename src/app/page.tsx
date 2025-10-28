@@ -19,7 +19,7 @@ interface Product {
 
 const faqData = [
   {
-    question: "What is FluffyChoo?",
+    question: "What is fluffychoo?",
     answer: "Fluffychoo is a tiny weekend dessert shop that makes soft treats like mochi brownies, banana pudding, and other dreamy sweets. Everything's made fresh in small batches."
   },
   {
@@ -283,7 +283,7 @@ export default function Home() {
               Our Desserts
             </h2>
             <p className="text-lg text-amber-700/80 max-w-2xl mx-auto">
-              Each piece crafted with premium ingredients and baked to perfection
+              Each piece crafted with premium ingredients and baked to perfection.
             </p>
           </div>
 
@@ -440,7 +440,7 @@ export default function Home() {
               Frequently Asked Questions
             </h2>
             <p className="text-lg text-amber-700/80">
-              Everything you need to know about FluffyChoo
+              Everything you need to know about FluffyChoo.
             </p>
           </div>
 
@@ -485,7 +485,7 @@ export default function Home() {
               We&apos;d Love to Hear From You
             </h2>
             <p className="text-lg text-amber-700/80">
-              Share your thoughts, suggestions, or let us know how we can make your FluffyChoo experience even better
+              Share your thoughts, suggestions, or let us know how we can make your FluffyChoo experience even better.
             </p>
           </div>
 

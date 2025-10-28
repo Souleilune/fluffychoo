@@ -19,7 +19,7 @@ interface Product {
 
 const faqData = [
   {
-    question: "What is fluffychoo?",
+    question: "What is Fluffychoo?",
     answer: "Fluffychoo is a tiny weekend dessert shop that makes soft treats like mochi brownies, banana pudding, and other dreamy sweets. Everything's made fresh in small batches."
   },
   {
@@ -178,7 +178,7 @@ export default function Home() {
                   className="object-contain"
                 />
               </div>
-              <span className="text-xl font-semibold text-amber-900">fluffychoo</span>
+              <span className="text-xl font-semibold text-amber-900">Fluffychoo</span>
             </Link>
 
             <div className="hidden md:flex items-center space-x-6">
@@ -232,7 +232,7 @@ export default function Home() {
           <div className="text-center space-y-6 sm:space-y-8">
             <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-amber-200 shadow-sm">
               <Sparkles className="w-4 h-4 text-amber-500 mr-2" />
-              <span className="text-amber-700 text-sm font-medium">Welcome to fluffychoo!</span>
+              <span className="text-amber-700 text-sm font-medium">Welcome to Fluffychoo!</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight">
@@ -440,7 +440,7 @@ export default function Home() {
               Frequently Asked Questions
             </h2>
             <p className="text-lg text-amber-700/80">
-              Everything you need to know about FluffyChoo.
+              Everything you need to know about Fluffychoo.
             </p>
           </div>
 
@@ -485,7 +485,7 @@ export default function Home() {
               We&apos;d Love to Hear From You
             </h2>
             <p className="text-lg text-amber-700/80">
-              Share your thoughts, suggestions, or let us know how we can make your FluffyChoo experience even better.
+              Share your thoughts, suggestions, or let us know how we can make your Fluffychoo experience even better.
             </p>
           </div>
 
@@ -599,7 +599,7 @@ export default function Home() {
                     className="object-contain"
                   />
                 </div>
-                <span className="text-xl font-semibold">fluffychoo</span>
+                <span className="text-xl font-semibold">Fluffychoo</span>
               </div>
               <p className="text-amber-200 text-sm">
                 You deserve softness.
@@ -635,7 +635,7 @@ export default function Home() {
               className="flex items-center gap-2 text-amber-200 text-sm mb-2 hover:text-white transition-colors"
             >
               <Facebook className="w-4 h-4" />
-              fluffychoo.co
+              Fluffychoo.co
             </a>
             
             <a 
@@ -645,7 +645,7 @@ export default function Home() {
               className="flex items-center gap-2 text-amber-200 text-sm mb-2 hover:text-white transition-colors"
             >
               <Instagram className="w-4 h-4" />
-              fluffychoo.co
+              Fluffychoo.co
             </a>
             
             <a 
@@ -657,7 +657,7 @@ export default function Home() {
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
               </svg>
-              fluffychoo.co
+              Fluffychoo.co
             </a>
             
             <p className="text-amber-200 text-sm mt-4">
@@ -667,7 +667,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-amber-800 mt-8 pt-8 text-center text-amber-300 text-sm">
-            <p>&copy; 2025 fluffychoo.co Crafted with care.</p>
+            <p>&copy; 2025 Fluffychoo.co Crafted with care.</p>
           </div>
         </div>
       </footer>

@@ -431,7 +431,7 @@ export default function AdminProductsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="Enter product name (e.g., fluffychoo)"
+                  placeholder="Enter product name (e.g., Fluffychoo)"
                 />
               </div>
 

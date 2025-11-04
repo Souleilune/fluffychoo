@@ -739,8 +739,10 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   </div>
   
   {isProductDropdownOpen && (
-    <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-      {products.map(product => (
+  <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+    {products
+      .filter(product => product.price !== null && product.price > 0)
+      .map(product => (
         <div
           key={product.id}
           onClick={() => {
@@ -754,7 +756,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
             {product.discount_price !== null && product.discount_price !== undefined ? (
               <>
                 <span className="text-xs text-gray-500 line-through">
-                  ₱{product.price.toFixed(2)}
+                  ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
                 </span>
                 <span className="text-sm font-bold text-amber-900">
                   ₱{product.discount_price.toFixed(2)}
@@ -762,14 +764,14 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
               </>
             ) : (
               <span className="text-sm font-semibold text-amber-900">
-                ₱{product.price.toFixed(2)}
+                ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
               </span>
             )}
           </div>
         </div>
       ))}
-    </div>
-  )}
+  </div>
+)}
 </div>
                       </div>
 

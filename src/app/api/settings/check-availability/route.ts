@@ -80,6 +80,19 @@ export async function GET() {
       });
     }
 
+    // Check if it's weekend (Saturday = 6, Sunday = 0)
+    const dayOfWeek = phTime.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          is_available: false,
+          reason: 'weekend',
+          message: `We're baking and packing on weekends! Pre-orders are open Monday to Friday only. Come back on Monday to place your order.`
+        },
+      });
+    }
+
     // Check today's pending order count
     const startOfDayPH = new Date(phTime);
     startOfDayPH.setHours(0, 0, 0, 0);

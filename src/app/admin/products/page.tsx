@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Plus, Edit, Trash2, X, Save, Package, Upload, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, Package, Upload, GripVertical, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface Product {
@@ -15,6 +15,18 @@ interface Product {
   stock: number;
   is_active: boolean;
   display_order?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ProductSize {
+  id: string;
+  product_id: string;
+  size_name: string;
+  price: number;
+  discount_price?: number | null;
+  is_active: boolean;
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +49,17 @@ export default function AdminProductsPage() {
     image: '',
     is_active: true,
   });
+  const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
+  const [currentProductForSizes, setCurrentProductForSizes] = useState<Product | null>(null);
+  const [sizes, setSizes] = useState<ProductSize[]>([]);
+  const [isLoadingSizes, setIsLoadingSizes] = useState(false);
+  const [editingSize, setEditingSize] = useState<ProductSize | null>(null);
+  const [sizeFormData, setSizeFormData] = useState({
+  size_name: '',
+  price: '',
+  discount_price: '',
+  is_active: true,
+});
 
   useEffect(() => {
     fetchProducts();
@@ -251,6 +274,114 @@ export default function AdminProductsPage() {
     setDraggedIndex(null);
   };
 
+  const openSizeModal = async (product: Product) => {
+  setCurrentProductForSizes(product);
+  setIsSizeModalOpen(true);
+  await fetchSizes(product.id);
+};
+
+const fetchSizes = async (productId: string) => {
+  setIsLoadingSizes(true);
+  try {
+    const response = await fetch(`/api/admin/products/sizes?product_id=${productId}`);
+    const data = await response.json();
+    if (data.success) {
+      setSizes(data.data || []);
+    }
+  } catch (error) {
+    console.error('Failed to fetch sizes:', error);
+  } finally {
+    setIsLoadingSizes(false);
+  }
+};
+
+const openCreateSizeForm = () => {
+  setEditingSize(null);
+  setSizeFormData({
+    size_name: '',
+    price: '',
+    discount_price: '',
+    is_active: true,
+  });
+};
+
+const openEditSizeForm = (size: ProductSize) => {
+  setEditingSize(size);
+  setSizeFormData({
+    size_name: size.size_name,
+    price: size.price.toString(),
+    discount_price: size.discount_price?.toString() || '',
+    is_active: size.is_active,
+  });
+};
+
+const handleSaveSize = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!currentProductForSizes) return;
+
+  try {
+    const payload = {
+      product_id: currentProductForSizes.id,
+      size_name: sizeFormData.size_name.trim(),
+      price: parseFloat(sizeFormData.price),
+      discount_price: sizeFormData.discount_price ? parseFloat(sizeFormData.discount_price) : null,
+      is_active: sizeFormData.is_active,
+    };
+
+    let response;
+    if (editingSize) {
+      response = await fetch('/api/admin/products/sizes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingSize.id, ...payload }),
+      });
+    } else {
+      response = await fetch('/api/admin/products/sizes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    if (response.ok) {
+      await fetchSizes(currentProductForSizes.id);
+      setSizeFormData({
+        size_name: '',
+        price: '',
+        discount_price: '',
+        is_active: true,
+      });
+      setEditingSize(null);
+    } else {
+      const data = await response.json();
+      alert(`Failed to save size: ${data.error || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('Failed to save size:', error);
+    alert('Failed to save size');
+  }
+};
+
+const handleDeleteSize = async (sizeId: string) => {
+  if (!confirm('Are you sure you want to delete this size?')) return;
+  if (!currentProductForSizes) return;
+
+  try {
+    const response = await fetch(`/api/admin/products/sizes?id=${sizeId}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      await fetchSizes(currentProductForSizes.id);
+    } else {
+      alert('Failed to delete size');
+    }
+  } catch (error) {
+    console.error('Failed to delete size:', error);
+    alert('Failed to delete size');
+  }
+};
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -376,22 +507,31 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => openEditModal(product)}
-                      className="flex-1 px-4 py-2 text-amber-900 font-semibold rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2"
-                      style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
-                    >
-                      <Edit className="w-4 h-4" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <div className="space-y-2">
+  <div className="flex space-x-2">
+    <button
+      onClick={() => openEditModal(product)}
+      className="flex-1 px-4 py-2 text-amber-900 font-semibold rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2"
+      style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
+    >
+      <Edit className="w-4 h-4" />
+      <span>Edit</span>
+    </button>
+    <button
+      onClick={() => handleDelete(product.id)}
+      className="px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+  <button
+    onClick={() => openSizeModal(product)}
+    className="w-full px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-xl hover:bg-blue-100 hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2"
+  >
+    <Package className="w-4 h-4" />
+    <span>Manage Sizes</span>
+  </button>
+</div>
                 </div>
               </div>
             ))}
@@ -578,6 +718,193 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+      {/* Size Management Modal */}
+{isSizeModalOpen && currentProductForSizes && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="p-6 border-b border-amber-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <div>
+          <h2 className="text-2xl font-bold text-amber-900">Manage Sizes</h2>
+          <p className="text-sm text-amber-700 mt-1">{currentProductForSizes.name}</p>
+        </div>
+        <button
+          onClick={() => {
+            setIsSizeModalOpen(false);
+            setCurrentProductForSizes(null);
+            setSizes([]);
+            setEditingSize(null);
+          }}
+          className="text-amber-600 hover:text-amber-800"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* Add/Edit Size Form */}
+        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+          <h3 className="text-lg font-semibold text-amber-900 mb-4">
+            {editingSize ? 'Edit Size' : 'Add New Size'}
+          </h3>
+          <form onSubmit={handleSaveSize} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-amber-900 mb-2">
+                  Size Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={sizeFormData.size_name}
+                  onChange={(e) => setSizeFormData({ ...sizeFormData, size_name: e.target.value })}
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder='e.g., 6", Small, Regular'
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-amber-900 mb-2">
+                  Price (₱) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={sizeFormData.price}
+                  onChange={(e) => setSizeFormData({ ...sizeFormData, price: e.target.value })}
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-amber-900 mb-2">
+                  Discount Price (₱) <span className="text-gray-500 text-xs">(Optional)</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={sizeFormData.discount_price}
+                  onChange={(e) => setSizeFormData({ ...sizeFormData, discount_price: e.target.value })}
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="flex items-center">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sizeFormData.is_active}
+                    onChange={(e) => setSizeFormData({ ...sizeFormData, is_active: e.target.checked })}
+                    className="w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                  />
+                  <span className="text-sm font-medium text-amber-900">Active</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-all flex items-center space-x-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>{editingSize ? 'Update Size' : 'Add Size'}</span>
+              </button>
+              {editingSize && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingSize(null);
+                    setSizeFormData({
+                      size_name: '',
+                      price: '',
+                      discount_price: '',
+                      is_active: true,
+                    });
+                  }}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all"
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* Sizes List */}
+        <div>
+          <h3 className="text-lg font-semibold text-amber-900 mb-4">Available Sizes</h3>
+          {isLoadingSizes ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
+            </div>
+          ) : sizes.length === 0 ? (
+            <div className="text-center py-8 bg-amber-50 rounded-xl border border-amber-200">
+              <Package className="w-12 h-12 text-amber-300 mx-auto mb-2" />
+              <p className="text-amber-600">No sizes added yet. Add your first size above!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sizes.map((size) => (
+                <div
+                  key={size.id}
+                  className="bg-white rounded-xl p-4 border border-amber-200 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <h4 className="font-semibold text-amber-900">{size.size_name}</h4>
+                        {!size.is_active && (
+                          <span className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2">
+                        {size.discount_price !== null && size.discount_price !== undefined ? (
+                          <>
+                            <span className="text-sm text-gray-500 line-through">
+                              ₱{size.price.toFixed(2)}
+                            </span>
+                            <span className="text-lg font-bold text-amber-900">
+                              ₱{size.discount_price.toFixed(2)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-lg font-bold text-amber-900">
+                            ₱{size.price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openEditSizeForm(size)}
+                        className="px-3 py-2 text-amber-900 font-semibold rounded-lg hover:bg-amber-50 transition-all flex items-center space-x-1"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSize(size.id)}
+                        className="px-3 py-2 bg-red-100 text-red-600 font-semibold rounded-lg hover:bg-red-200 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </AdminLayout>
   );
 }

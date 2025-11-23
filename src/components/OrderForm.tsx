@@ -32,13 +32,25 @@ interface Product {
   is_active: boolean;
 }
 
+interface ProductSize {
+  id: string;
+  size_name: string;
+  price: number;
+  discount_price?: number | null;
+  display_order: number;
+}
+
 interface OrderItem {
   productId: string;
   productName: string;
+  sizeId: string;
+  sizeName: string;
   price: number;
   discount_price?: number | null;
   quantity: number;
 }
+
+
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -69,6 +81,10 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [courierBookingCheckbox, setCourierBookingCheckbox] = useState(false);
   const [deliveryDetailsCheckbox, setDeliveryDetailsCheckbox] = useState(false);
   const [noCancellationCheckbox, setNoCancellationCheckbox] = useState(false);
+  const [productSizes, setProductSizes] = useState<ProductSize[]>([]);
+  const [selectedSizeId, setSelectedSizeId] = useState('');
+  const [isLoadingSizes, setIsLoadingSizes] = useState(false);
+  const [isSizeDropdownOpen, setIsSizeDropdownOpen] = useState(false);
   
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string>('');
@@ -106,6 +122,16 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     }
   }, [selectedProduct, products]);
 
+  // Add after the existing useEffect for selectedProduct
+useEffect(() => {
+  if (selectedProductId) {
+    fetchProductSizes(selectedProductId);
+  } else {
+    setProductSizes([]);
+    setSelectedSizeId('');
+  }
+}, [selectedProductId]);
+
   const checkOrderFormAvailability = async () => {
   setIsCheckingAvailability(true);
   try {
@@ -139,6 +165,34 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     setUnavailabilityMessage('');
   } finally {
     setIsCheckingAvailability(false);
+  }
+};
+
+const fetchProductSizes = async (productId: string) => {
+  if (!productId) {
+    setProductSizes([]);
+    return;
+  }
+
+  setIsLoadingSizes(true);
+  try {
+    const response = await fetch(`/api/products/sizes?product_id=${productId}`);
+    const data = await response.json();
+    
+    if (data.success && Array.isArray(data.data)) {
+      setProductSizes(data.data);
+      // Auto-select first size if available
+      if (data.data.length > 0) {
+        setSelectedSizeId(data.data[0].id);
+      }
+    } else {
+      setProductSizes([]);
+    }
+  } catch (error) {
+    console.error('Failed to fetch product sizes:', error);
+    setProductSizes([]);
+  } finally {
+    setIsLoadingSizes(false);
   }
 };
 
@@ -177,6 +231,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
     setOrderItems([]);
     setSelectedProductId('');
     setSelectedQuantity(1);
+    setProductSizes([]);
+    setSelectedSizeId(''); 
     setDeliveryPolicyAccepted(false);
     setCourierCheckbox(false);
     setSundayOnlyCheckbox(false);
@@ -222,44 +278,55 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
 
   const handleAddProduct = () => {
   const product = products.find(p => p.id === selectedProductId);
-  if (!product) return;
+  const size = productSizes.find(s => s.id === selectedSizeId);
+  
+  if (!product || !size) return;
 
-  // Check if product already exists in order items
-  const existingItemIndex = orderItems.findIndex(item => item.productId === product.id);
+  // Create unique key combining product and size
+  const itemKey = `${product.id}-${size.id}`;
+  const existingItemIndex = orderItems.findIndex(
+    item => item.productId === product.id && item.sizeId === size.id
+  );
   
   if (existingItemIndex !== -1) {
-    // Product exists, update quantity
+    // Product + Size combo exists, update quantity
     const updatedItems = [...orderItems];
     updatedItems[existingItemIndex].quantity += selectedQuantity;
     setOrderItems(updatedItems);
   } else {
-    // Product doesn't exist, add new item
+    // New product + size combo, add new item
     setOrderItems([...orderItems, {
       productId: product.id,
       productName: product.name,
-      price: product.price,
-      discount_price: product.discount_price,
+      sizeId: size.id,
+      sizeName: size.size_name,
+      price: size.price,
+      discount_price: size.discount_price,
       quantity: selectedQuantity,
     }]);
   }
 
   setSelectedProductId('');
   setSelectedQuantity(1);
+  setProductSizes([]);
+  setSelectedSizeId('');
 };
 
-  const handleRemoveProduct = (productId: string) => {
-    setOrderItems(orderItems.filter(item => item.productId !== productId));
-  };
+  const handleRemoveProduct = (productId: string, sizeId: string) => {
+  setOrderItems(orderItems.filter(
+    item => !(item.productId === productId && item.sizeId === sizeId)
+  ));
+};
 
- const handleUpdateQuantity = (productId: string, newQuantity: number) => {
-     if (newQuantity < 1) return;
+ const handleUpdateQuantity = (productId: string, sizeId: string, newQuantity: number) => {
+  if (newQuantity < 1) return;
 
-     setOrderItems(orderItems.map(item => 
-       item.productId === productId 
-         ? { ...item, quantity: newQuantity }
-         : item
-     ));
-   };
+  setOrderItems(orderItems.map(item => 
+    (item.productId === productId && item.sizeId === sizeId)
+      ? { ...item, quantity: newQuantity }
+      : item
+  ));
+};
 
   const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -400,7 +467,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
       }
 
       const orderString = orderItems.map(item => 
-        `${item.productName} (x${item.quantity})`
+        `${item.productName} (${item.sizeName}) × ${item.quantity}`
       ).join(', ');
 
       const totalQuantity = orderItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -722,57 +789,114 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   <>
                     <div className="space-y-3">
                       <div>
-                        <label htmlFor="product" className="block text-sm font-medium text-amber-900 mb-1">
-                          Select Product
-                        </label>
-                        <div className="relative">
-  <div
-    onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
-    className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white cursor-pointer flex items-center justify-between"
-  >
-    <span className="text-amber-900">
-      {selectedProductId 
-        ? products.find(p => p.id === selectedProductId)?.name || 'Choose a product...'
-        : 'Choose a product...'}
-    </span>
-    <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${isProductDropdownOpen ? 'rotate-90' : ''}`} />
-  </div>
-  
-  {isProductDropdownOpen && (
-  <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-    {products
-      .filter(product => product.price !== null && product.price > 0)
-      .map(product => (
-        <div
-          key={product.id}
-          onClick={() => {
-            setSelectedProductId(product.id);
-            setIsProductDropdownOpen(false);
-          }}
-          className="px-4 py-3 hover:bg-amber-50 cursor-pointer transition-colors border-b border-amber-100 last:border-b-0"
-        >
-          <div className="font-semibold text-amber-900">{product.name}</div>
-          <div className="flex items-center gap-2 mt-1">
-            {product.discount_price !== null && product.discount_price !== undefined ? (
-              <>
-                <span className="text-xs text-gray-500 line-through">
-                  ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
-                </span>
-                <span className="text-sm font-bold text-amber-900">
-                  ₱{product.discount_price.toFixed(2)}
-                </span>
-              </>
-            ) : (
-              <span className="text-sm font-semibold text-amber-900">
-                ₱{product.price !== null ? product.price.toFixed(2) : '0.00'}
-              </span>
-            )}
-          </div>
+                        <>
+  {/* Product Dropdown */}
+  <div>
+    <label htmlFor="product" className="block text-sm font-medium text-amber-900 mb-1">
+      Select Product
+    </label>
+    <div className="relative">
+      <div
+        onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
+        className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white cursor-pointer flex items-center justify-between"
+      >
+        <span className="text-amber-900">
+          {selectedProductId 
+            ? products.find(p => p.id === selectedProductId)?.name || 'Choose a product...'
+            : 'Choose a product...'}
+        </span>
+        <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${isProductDropdownOpen ? 'rotate-90' : ''}`} />
+      </div>
+      
+      {isProductDropdownOpen && (
+        <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+          {products
+            .filter(product => product.price !== null && product.price > 0)
+            .map(product => (
+              <div
+                key={product.id}
+                onClick={() => {
+                  setSelectedProductId(product.id);
+                  setIsProductDropdownOpen(false);
+                }}
+                className="px-4 py-3 hover:bg-amber-50 cursor-pointer transition-colors border-b border-amber-100 last:border-b-0"
+              >
+                <div className="font-semibold text-amber-900">{product.name}</div>
+              </div>
+            ))}
         </div>
-      ))}
+      )}
+    </div>
   </div>
-)}
-</div>
+
+  {/* Size Dropdown - Only show when product is selected */}
+  {selectedProductId && (
+    <div>
+      <label htmlFor="size" className="block text-sm font-medium text-amber-900 mb-1">
+        Select Size
+      </label>
+      {isLoadingSizes ? (
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
+        </div>
+      ) : productSizes.length === 0 ? (
+        <div className="text-sm text-amber-600 py-2">No sizes available for this product</div>
+      ) : (
+        <div className="relative">
+          <div
+            onClick={() => setIsSizeDropdownOpen(!isSizeDropdownOpen)}
+            className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white cursor-pointer flex items-center justify-between"
+          >
+            <span className="text-amber-900">
+              {selectedSizeId 
+                ? productSizes.find(s => s.id === selectedSizeId)?.size_name || 'Choose a size...'
+                : 'Choose a size...'}
+            </span>
+            <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${isSizeDropdownOpen ? 'rotate-90' : ''}`} />
+          </div>
+          
+          {isSizeDropdownOpen && (
+            <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+              {productSizes.map(size => (
+                <div
+                  key={size.id}
+                  onClick={() => {
+                    setSelectedSizeId(size.id);
+                    setIsSizeDropdownOpen(false);
+                  }}
+                  className="px-4 py-3 hover:bg-amber-50 cursor-pointer transition-colors border-b border-amber-100 last:border-b-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-amber-900">{size.size_name}</span>
+                    <div className="flex items-center gap-2">
+                      {size.discount_price !== null && size.discount_price !== undefined ? (
+                        <>
+                          <span className="text-xs text-gray-500 line-through">
+                            ₱{size.price.toFixed(2)}
+                          </span>
+                          <span className="text-sm font-bold text-amber-900">
+                            ₱{size.discount_price.toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-semibold text-amber-900">
+                          ₱{size.price.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )}
+
+  {/* Quantity Input */}
+  
+</>
                       </div>
 
                       <div>
@@ -806,35 +930,40 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                         <h4 className="font-semibold text-amber-900">Review Your Order</h4>
                         <div className="space-y-2">
                           {orderItems.map((item) => (
-                            <div key={item.productId} className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-semibold text-amber-900">{item.productName}</span>
-                                <button
-                                  onClick={() => handleRemoveProduct(item.productId)}
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <div className="flex items-center justify-between text-sm text-amber-700">
-                                <span>Quantity: {item.quantity}</span>
-                                <div className="flex flex-col items-end">
-                                  {item.discount_price !== null && item.discount_price !== undefined ? (
-                                    <>
-                                      <span className="text-xs text-gray-500 line-through">
-                                        ₱{(item.price * item.quantity).toFixed(2)}
-                                      </span>
-                                      <span className="font-semibold text-amber-900">
-                                        ₱{(item.discount_price * item.quantity).toFixed(2)}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="font-semibold">₱{(item.price * item.quantity).toFixed(2)}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+  <div key={`${item.productId}-${item.sizeId}`} className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+    <div className="flex items-center justify-between mb-2">
+      <div>
+        <span className="font-semibold text-amber-900">{item.productName}</span>
+        <span className="text-sm text-amber-700 block">Size: {item.sizeName}</span>
+      </div>
+      <button
+        onClick={() => handleRemoveProduct(item.productId, item.sizeId)}
+        className="text-red-500 hover:text-red-700"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+    <div className="flex items-center justify-between text-sm text-amber-700">
+      <span>Quantity: {item.quantity}</span>
+      <div className="flex flex-col items-end">
+        {item.discount_price !== null && item.discount_price !== undefined ? (
+          <>
+            <span className="text-xs text-gray-500 line-through">
+              ₱{item.price.toFixed(2)}
+            </span>
+            <span className="text-sm font-bold text-amber-900">
+              ₱{(item.discount_price * item.quantity).toFixed(2)}
+            </span>
+          </>
+        ) : (
+          <span className="text-sm font-bold text-amber-900">
+            ₱{(item.price * item.quantity).toFixed(2)}
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
+))}
                         </div>
                         
                         <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
@@ -1008,8 +1137,8 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                     <span className="text-sm font-medium text-amber-900">Order:</span>
                     <div className="mt-1 space-y-1">
                       {orderItems.map((item) => (
-                        <p key={item.productId} className="text-amber-700">
-                          {item.productName} × {item.quantity}
+                        <p key={`${item.productId}-${item.sizeId}`} className="text-amber-700">
+                          {item.productName} ({item.sizeName}) × {item.quantity}
                         </p>
                       ))}
                     </div>
@@ -1020,75 +1149,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
                   </div>
                 </div>
 
-                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                  <h4 className="font-semibold text-amber-900 mb-3">Required checkboxes:</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="sundayOnly"
-                        checked={sundayOnlyCheckbox}
-                        onChange={(e) => setSundayOnlyCheckbox(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                      />
-                      <label htmlFor="sundayOnly" className="text-sm text-amber-800">
-                        I understand that Fluffychoo bakes and packs every Sunday only.
-                      </label>
-                    </div>
-
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="courierBooking"
-                        checked={courierBookingCheckbox}
-                        onChange={(e) => setCourierBookingCheckbox(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                      />
-                      <label htmlFor="courierBooking" className="text-sm text-amber-800">
-                        I will book and pay for my own courier once I receive the pickup text.
-                      </label>
-                    </div>
-
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="deliveryDetails"
-                        checked={deliveryDetailsCheckbox}
-                        onChange={(e) => setDeliveryDetailsCheckbox(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                      />
-                      <label htmlFor="deliveryDetails" className="text-sm text-amber-800">
-                        I confirm that my delivery details are complete and accurate.
-                      </label>
-                    </div>
-
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="noCancellation"
-                        checked={noCancellationCheckbox}
-                        onChange={(e) => setNoCancellationCheckbox(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                      />
-                      <label htmlFor="noCancellation" className="text-sm text-amber-800">
-                        No cancellations once order is placed and paid.
-                      </label>
-                    </div>
-
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="courier"
-                        checked={courierCheckbox}
-                        onChange={(e) => setCourierCheckbox(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                      />
-                      <label htmlFor="courier" className="text-sm text-amber-800">
-                        I understand all delivery policy terms.
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                
 
                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
                   <h4 className="font-semibold text-amber-900 mb-3">Security Verification</h4>

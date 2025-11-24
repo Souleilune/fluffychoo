@@ -387,7 +387,7 @@ const fetchProductSizes = async (productId: string) => {
       case 4:
         return !!paymentProof;
       case 5:
-        return !!(courierCheckbox && sundayOnlyCheckbox && courierBookingCheckbox && deliveryDetailsCheckbox && noCancellationCheckbox && captchaToken);
+        return !!captchaToken;
       case 6:
         return true;
       default:

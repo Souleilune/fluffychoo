@@ -13,6 +13,7 @@ interface ProductUpdateData {
   is_active?: boolean;
   display_order?: number;
   updated_at?: string;
+  stock?: number; // ✅ ADD THIS LINE
 }
 
 // GET /api/admin/products - Get all products
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     const description = body?.description;
     const image = body?.image;
     const is_active = body?.is_active;
+    const stock = body?.stock;
 
     console.log('Field analysis:', {
       name: { value: name, type: typeof name, isNull: name === null, isUndefined: name === undefined },
@@ -124,6 +126,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ✅ ADD THIS ENTIRE STOCK PROCESSING BLOCK
+    let processedStock = 0;
+    if (stock !== null && stock !== undefined) {
+      if (typeof stock === 'string' && stock.trim() !== '') {
+        const numStock = parseInt(stock.trim(), 10);
+        if (!isNaN(numStock) && numStock >= 0) {
+          processedStock = numStock;
+        }
+      } else if (typeof stock === 'number' && !isNaN(stock) && stock >= 0) {
+        processedStock = Math.floor(stock);
+      }
+    }
+
     let processedDescription = null;
     if (description !== null && description !== undefined && typeof description === 'string') {
       const trimmedDesc = description.trim();
@@ -144,6 +159,7 @@ export async function POST(request: NextRequest) {
       name: trimmedName,
       price: processedPrice,
       discount_price: processedDiscountPrice,
+      stock: processedStock,  // ✅ ADD THIS LINE
       description: processedDescription,
       image: processedImage,
       is_active: is_active === true || is_active === 'true',
@@ -225,6 +241,16 @@ export async function PATCH(request: NextRequest) {
     if (updateFields.discount_price !== undefined) {
       const discount_price = updateFields.discount_price?.trim();
       updateData.discount_price = discount_price && discount_price !== '' ? parseFloat(discount_price) : null;
+    }
+
+    // ✅ ADD THIS ENTIRE STOCK UPDATE BLOCK
+    if (updateFields.stock !== undefined && updateFields.stock !== null) {
+      const stockValue = typeof updateFields.stock === 'string' 
+        ? parseInt(updateFields.stock.trim(), 10) 
+        : updateFields.stock;
+      if (!isNaN(stockValue) && stockValue >= 0) {
+        updateData.stock = Math.floor(stockValue);
+      }
     }
 
     if (updateFields.description !== undefined) {

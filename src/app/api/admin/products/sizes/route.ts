@@ -12,6 +12,7 @@ interface ProductSize {
   discount_price?: number | null;
   is_active: boolean;
   display_order?: number;
+  stock?: number; // ✅ ADD THIS LINE
 }
 
 // GET /api/admin/products/sizes?product_id=xxx - Get sizes for a product
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { product_id, size_name, price, discount_price, is_active, display_order }: ProductSize = body;
+    const { product_id, size_name, price, discount_price, stock, is_active, display_order }: ProductSize = body;
 
     if (!product_id || !size_name || price === undefined || price === null) {
       return NextResponse.json(
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
       size_name: size_name.trim(),
       price: parseFloat(price.toString()),
       discount_price: discount_price ? parseFloat(discount_price.toString()) : null,
+      stock: stock !== undefined && stock !== null ? parseInt(stock.toString(), 10) : 0,  // ✅ ADD THIS LINE
       is_active: is_active !== undefined ? is_active : true,
       display_order: order,
       created_at: new Date().toISOString(),
@@ -156,6 +158,16 @@ export async function PATCH(request: NextRequest) {
       updateData.discount_price = updateFields.discount_price 
         ? parseFloat(updateFields.discount_price.toString()) 
         : null;
+    }
+
+    // ✅ ADD THIS ENTIRE STOCK UPDATE BLOCK
+    if (updateFields.stock !== undefined && updateFields.stock !== null) {
+      const stockValue = typeof updateFields.stock === 'string' 
+        ? parseInt(updateFields.stock.trim(), 10) 
+        : updateFields.stock;
+      if (!isNaN(stockValue) && stockValue >= 0) {
+        updateData.stock = Math.floor(stockValue);
+      }
     }
 
     if (updateFields.is_active !== undefined) {

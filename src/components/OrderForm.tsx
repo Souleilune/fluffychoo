@@ -791,43 +791,65 @@ const fetchProductSizes = async (productId: string) => {
                       <div>
                         <>
   {/* Product Dropdown */}
-  <div>
-    <label htmlFor="product" className="block text-sm font-medium text-amber-900 mb-1">
-      Select Product
-    </label>
-    <div className="relative">
-      <div
-        onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
-        className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white cursor-pointer flex items-center justify-between"
-      >
-        <span className="text-amber-900">
-          {selectedProductId 
-            ? products.find(p => p.id === selectedProductId)?.name || 'Choose a product...'
-            : 'Choose a product...'}
-        </span>
-        <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${isProductDropdownOpen ? 'rotate-90' : ''}`} />
-      </div>
-      
-      {isProductDropdownOpen && (
-        <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-          {products
-            .filter(product => product.price !== null && product.price > 0)
-            .map(product => (
+  {/* Product Dropdown */}
+<div>
+  <label htmlFor="product" className="block text-sm font-medium text-amber-900 mb-1">
+    Select Product
+  </label>
+  <div className="relative">
+    <div
+      onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
+      className="w-full px-4 py-2.5 rounded-xl border border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all bg-white cursor-pointer flex items-center justify-between"
+    >
+      <span className="text-amber-900">
+        {selectedProductId 
+          ? products.find(p => p.id === selectedProductId)?.name || 'Choose a product...'
+          : 'Choose a product...'}
+      </span>
+      <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${isProductDropdownOpen ? 'rotate-90' : ''}`} />
+    </div>
+    
+    {isProductDropdownOpen && (
+      <div className="absolute z-10 w-full mt-2 bg-white border border-amber-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+        {products
+          .filter(product => product.price !== null && product.price > 0)
+          .map(product => {
+            const isSoldOut = product.stock === 0;
+            return (
               <div
                 key={product.id}
                 onClick={() => {
-                  setSelectedProductId(product.id);
-                  setIsProductDropdownOpen(false);
+                  if (!isSoldOut) {
+                    setSelectedProductId(product.id);
+                    setIsProductDropdownOpen(false);
+                  }
                 }}
-                className="px-4 py-3 hover:bg-amber-50 cursor-pointer transition-colors border-b border-amber-100 last:border-b-0"
+                className={`px-4 py-3 border-b border-amber-100 last:border-b-0 transition-colors ${
+                  isSoldOut 
+                    ? 'bg-gray-50 cursor-not-allowed opacity-60' 
+                    : 'hover:bg-amber-50 cursor-pointer'
+                }`}
               >
-                <div className="font-semibold text-amber-900">{product.name}</div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-semibold text-amber-900">{product.name}</div>
+                    {isSoldOut && (
+                      <div className="text-xs text-red-600 font-medium mt-1">Sold Out</div>
+                    )}
+                  </div>
+                  {isSoldOut && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full font-medium">
+                      SOLD OUT
+                    </span>
+                  )}
+                </div>
               </div>
-            ))}
-        </div>
-      )}
-    </div>
+            );
+          })}
+      </div>
+    )}
   </div>
+</div>
 
   {/* Size Dropdown - Only show when product is selected */}
   {selectedProductId && (

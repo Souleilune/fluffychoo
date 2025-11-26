@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf, ChevronDown, MessageSquare, Send, X } from 'lucide-react';
+import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf, ChevronDown, MessageSquare, Send, X, ShoppingBag } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
 
 interface Product {
@@ -307,19 +307,32 @@ export default function Home() {
                   className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
                 >
                   <div className="relative h-64 overflow-hidden">
-                    {product.image ? (
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
-                        <Cookie className="w-16 h-16 text-amber-400" />
-                      </div>
-                    )}
-                  </div>
+  {product.image ? (
+    <Image
+      src={product.image}
+      alt={product.name}
+      fill
+      className={`object-cover transition-transform duration-300 group-hover:scale-110 ${
+        product.stock === 0 ? 'opacity-50 grayscale' : ''
+      }`}
+    />
+  ) : (
+    <div className={`absolute inset-0 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center ${
+      product.stock === 0 ? 'opacity-50 grayscale' : ''
+    }`}>
+      <Package className="w-24 h-24 text-amber-400" />
+    </div>
+  )}
+  
+  {/* ✅ ADD THIS SOLD OUT OVERLAY */}
+  {product.stock === 0 && (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-5deg]">
+        SOLD OUT
+      </div>
+    </div>
+  )}
+</div>
                  <div className="p-6">
   <h3 className="text-2xl font-bold text-amber-900 mb-2">{product.name}</h3>
   {product.description && (
@@ -390,6 +403,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        
       </section>
       
 
@@ -735,8 +749,16 @@ export default function Home() {
             ) : (
               <span className="text-2xl font-semibold text-amber-600">Price TBD</span>
             )}
-            
+              <ShoppingBag className="w-6 h-6 text-amber-600 group-hover:text-amber-700" />
+
           </div>
+          {selectedProductDetail.stock === 0 && (  // ✅ Correct variable and property
+            <div className="mt-3 text-sm text-red-600 font-medium">
+              Out of Stock
+            </div>
+          )}
+
+          
           
           {/* Full Description */}
           {selectedProductDetail.description && (

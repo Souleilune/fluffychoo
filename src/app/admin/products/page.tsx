@@ -25,6 +25,7 @@ interface ProductSize {
   size_name: string;
   price: number;
   discount_price?: number | null;
+  stock: number;  // ✅ ADD THIS LINE
   is_active: boolean;
   display_order: number;
   created_at: string;
@@ -42,13 +43,14 @@ export default function AdminProductsPage() {
   const [isReordering, setIsReordering] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    discount_price: '',
-    description: '',
-    image: '',
-    is_active: true,
-  });
+  name: '',
+  price: '',
+  discount_price: '',
+  stock: '0',  // ✅ ADD THIS LINE
+  description: '',
+  image: '',
+  is_active: true,
+});
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
   const [currentProductForSizes, setCurrentProductForSizes] = useState<Product | null>(null);
   const [sizes, setSizes] = useState<ProductSize[]>([]);
@@ -58,6 +60,7 @@ export default function AdminProductsPage() {
   size_name: '',
   price: '',
   discount_price: '',
+  stock: '0',
   is_active: true,
 });
 
@@ -81,41 +84,43 @@ export default function AdminProductsPage() {
   };
 
   const openCreateModal = () => {
-    setEditingProduct(null);
-    setSelectedFile(null);
-    setImagePreview(null);
-    setFormData({
-      name: '',
-      price: '',
-      discount_price: '',
-      description: '',
-      image: '',
-      is_active: true,
-    });
-    setIsModalOpen(true);
-  };
+  setEditingProduct(null);
+  setSelectedFile(null);
+  setImagePreview(null);
+  setFormData({
+    name: '',
+    price: '',
+    discount_price: '',
+    stock: '0',  // ✅ ADD THIS LINE
+    description: '',
+    image: '',
+    is_active: true,
+  });
+  setIsModalOpen(true);
+};
 
   const openEditModal = (product: Product) => {
-    setEditingProduct(product);
-    setSelectedFile(null);
-    setImagePreview(product.image);
-    setFormData({
-      name: product.name || '',
-      price: product.price?.toString() || '',
-      discount_price: product.discount_price?.toString() || '',
-      description: product.description || '',
-      image: product.image || '',
-      is_active: product.is_active !== undefined ? product.is_active : true,
-    });
-    setIsModalOpen(true);
-  };
+  setEditingProduct(product);
+  setSelectedFile(null);
+  setImagePreview(product.image);
+  setFormData({
+    name: product.name || '',
+    price: product.price?.toString() || '',
+    discount_price: product.discount_price?.toString() || '',
+    stock: product.stock?.toString() || '0',  // ✅ ADD THIS LINE
+    description: product.description || '',
+    image: product.image || '',
+    is_active: product.is_active !== undefined ? product.is_active : true,
+  });
+  setIsModalOpen(true);
+};
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         alert('File size must be less than 5MB');
-        return;
+        return; 
       }
       
       setSelectedFile(file);
@@ -168,6 +173,7 @@ export default function AdminProductsPage() {
         discount_price: (formData.discount_price && formData.discount_price.trim() !== '') 
           ? formData.discount_price.trim() 
           : '',
+        stock: formData.stock ? parseInt(formData.stock, 10) : 0,  // ✅ ADD THIS LINE
         description: (formData.description && formData.description.trim() !== '') 
           ? formData.description.trim() 
           : '',
@@ -302,6 +308,7 @@ const openCreateSizeForm = () => {
     price: '',
     discount_price: '',
     is_active: true,
+    stock: '0',  // ✅ ADD THIS LINE
   });
 };
 
@@ -311,6 +318,7 @@ const openEditSizeForm = (size: ProductSize) => {
     size_name: size.size_name,
     price: size.price.toString(),
     discount_price: size.discount_price?.toString() || '',
+    stock: size.stock?.toString() || '0',  // ✅ ADD THIS LINE
     is_active: size.is_active,
   });
 };
@@ -325,6 +333,7 @@ const handleSaveSize = async (e: React.FormEvent) => {
       size_name: sizeFormData.size_name.trim(),
       price: parseFloat(sizeFormData.price),
       discount_price: sizeFormData.discount_price ? parseFloat(sizeFormData.discount_price) : null,
+      stock: parseInt(sizeFormData.stock, 10) || 0,  // ✅ ADD THIS LINE
       is_active: sizeFormData.is_active,
     };
 
@@ -350,6 +359,7 @@ const handleSaveSize = async (e: React.FormEvent) => {
         price: '',
         discount_price: '',
         is_active: true,
+        stock: '0',
       });
       setEditingSize(null);
     } else {
@@ -479,11 +489,23 @@ const handleDeleteSize = async (sizeId: string) => {
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-amber-900">{product.name}</h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {product.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    {/* ✅ REPLACE WITH THIS SECTION */}
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {product.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                        product.stock === 0 
+                          ? 'bg-red-100 text-red-800' 
+                          : product.stock < 10 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        Stock: {product.stock}
+                      </span>
+                    </div>
                   </div>
                   {product.description && (
                     <p className="text-sm text-amber-600 mb-3 line-clamp-2">{product.description}</p>
@@ -603,6 +625,26 @@ const handleDeleteSize = async (sizeId: string) => {
                   className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="1.99 (optional)"
                 />
+              </div>
+
+              {/* ✅ ADD THIS ENTIRE STOCK INPUT FIELD */}
+              <div>
+                <label className="block text-sm font-medium text-amber-900 mb-2">
+                  Stock Quantity *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  required
+                  value={formData.stock}  // ✅ CORRECT - Use formData for product form
+                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}  // ✅ CORRECT
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="Enter stock quantity (e.g., 15)"
+                />
+                <p className="text-xs text-amber-600 mt-1">
+                  Set to 0 to mark this product as sold out
+                </p>
               </div>
 
               <div>
@@ -747,7 +789,7 @@ const handleDeleteSize = async (sizeId: string) => {
             {editingSize ? 'Edit Size' : 'Add New Size'}
           </h3>
           <form onSubmit={handleSaveSize} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-amber-900 mb-2">
                   Size Name *
@@ -793,6 +835,25 @@ const handleDeleteSize = async (sizeId: string) => {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-amber-900 mb-2">
+                  Stock Quantity *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  required
+                  value={sizeFormData.stock}
+                  onChange={(e) => setSizeFormData({ ...sizeFormData, stock: e.target.value })}
+                  className="w-full px-4 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="Enter stock quantity"
+                />
+                <p className="text-xs text-amber-600 mt-1">
+                  Set to 0 to mark as sold out
+                </p>
+              </div>
+
               <div className="flex items-center">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
@@ -824,6 +885,7 @@ const handleDeleteSize = async (sizeId: string) => {
                       price: '',
                       discount_price: '',
                       is_active: true,
+                      stock: '0',
                     });
                   }}
                   className="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all"
@@ -856,14 +918,24 @@ const handleDeleteSize = async (sizeId: string) => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <h4 className="font-semibold text-amber-900">{size.size_name}</h4>
-                        {!size.is_active && (
-                          <span className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
-                            Inactive
-                          </span>
-                        )}
-                      </div>
+                     <div className="flex items-center space-x-3">
+                      <h4 className="font-semibold text-amber-900">{size.size_name}</h4>
+                      {!size.is_active && (
+                        <span className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
+                          Inactive
+                        </span>
+                      )}
+                      {/* ✅ ADD THIS STOCK BADGE */}
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                        size.stock === 0 
+                          ? 'bg-red-100 text-red-800' 
+                          : size.stock < 10 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        Stock: {size.stock}
+                      </span>
+                    </div>
                       <div className="flex items-center gap-3 mt-2">
                         {size.discount_price !== null && size.discount_price !== undefined ? (
                           <>

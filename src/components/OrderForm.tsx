@@ -77,7 +77,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   
   const [deliveryPolicyAccepted, setDeliveryPolicyAccepted] = useState(false);
-  const [_courierCheckbox, setCourierCheckbox] = useState(false);
+  
   const [productSizes, setProductSizes] = useState<ProductSize[]>([]);
   const [selectedSizeId, setSelectedSizeId] = useState('');
   const [isLoadingSizes, setIsLoadingSizes] = useState(false);
@@ -231,7 +231,6 @@ const fetchProductSizes = async (productId: string) => {
     setProductSizes([]);
     setSelectedSizeId(''); 
     setDeliveryPolicyAccepted(false);
-    setCourierCheckbox(false);
     setPaymentProof(null);
     setPaymentProofPreview('');
     setCaptchaToken(null);

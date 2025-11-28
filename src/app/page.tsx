@@ -701,7 +701,7 @@ export default function Home() {
     onClick={() => setIsDetailModalOpen(false)}
   >
     <div 
-      className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" 
+      className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide" 
       onClick={(e) => e.stopPropagation()}
     >
       {/* Modal Header */}

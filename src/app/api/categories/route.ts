@@ -1,10 +1,10 @@
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// GET /api/categories - Get all active categories (public)
+// GET /api/admin/categories - Get all active categories (public)
 export async function GET() {
   try {
     // Create public supabase client
@@ -33,6 +33,47 @@ export async function GET() {
       success: true,
       data: data || [],
     });
+  } catch (error: unknown) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// If you have POST, PUT, or DELETE methods, add type to request parameter:
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    // ... your code
+  } catch (error: unknown) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    // ... your code
+  } catch (error: unknown) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    // ... your code
   } catch (error: unknown) {
     console.error('API error:', error);
     return NextResponse.json(

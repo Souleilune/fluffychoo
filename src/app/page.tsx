@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Sparkles, Wheat, Cookie, Loader2, Package, Clock, Mail, Facebook, Instagram, Leaf, ChevronDown, MessageSquare, Send, X, ShoppingBag } from 'lucide-react';
 import OrderForm from '@/components/OrderForm';
+import ProductImageCarousel from '@/components/ProductImageCarousel';
+import ProductDetailCarousel from '@/components/ProductDetailCarousel';
 
 interface Product {
   id: string;
@@ -306,33 +308,12 @@ export default function Home() {
                   onClick={() => handleProductClick(product)}
                   className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
                 >
-                  <div className="relative h-64 overflow-hidden">
-  {product.image ? (
-    <Image
-      src={product.image}
-      alt={product.name}
-      fill
-      className={`object-cover transition-transform duration-300 group-hover:scale-110 ${
-        product.stock === 0 ? 'opacity-50 grayscale' : ''
-      }`}
-    />
-  ) : (
-    <div className={`absolute inset-0 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center ${
-      product.stock === 0 ? 'opacity-50 grayscale' : ''
-    }`}>
-      <Package className="w-24 h-24 text-amber-400" />
-    </div>
-  )}
-  
-  {/* ✅ ADD THIS SOLD OUT OVERLAY */}
-  {product.stock === 0 && (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-red-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-5deg]">
-        SOLD OUT
-      </div>
-    </div>
-  )}
-</div>
+                 <ProductImageCarousel
+  productId={product.id}
+  fallbackImage={product.image}
+  productName={product.name}
+  isSoldOut={product.stock === 0}
+/>
                  <div className="p-6">
   <h3 className="text-2xl font-bold text-amber-900 mb-2">{product.name}</h3>
   {product.description && (
@@ -696,7 +677,7 @@ export default function Home() {
         selectedProduct={selectedProduct}
       />
       {/* Product Detail Modal */}
-{isDetailModalOpen && selectedProductDetail && (
+       {isDetailModalOpen && selectedProductDetail && (
   <div 
     className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" 
     onClick={() => setIsDetailModalOpen(false)}
@@ -718,17 +699,13 @@ export default function Home() {
       
       {/* Modal Body */}
       <div className="p-6 space-y-6">
-        {/* Product Image */}
-        {selectedProductDetail.image && (
-          <div className="relative h-80 rounded-2xl overflow-hidden">
-            <Image
-              src={selectedProductDetail.image}
-              alt={selectedProductDetail.name}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
+        {/* ⬇️ REPLACE THIS ENTIRE SECTION ⬇️ */}
+        <ProductDetailCarousel
+          productId={selectedProductDetail.id}
+          fallbackImage={selectedProductDetail.image}
+          productName={selectedProductDetail.name}
+        />
+        {/* ⬆️ END OF REPLACEMENT ⬆️ */}
         
         {/* Product Details */}
         <div className="space-y-4">
@@ -750,16 +727,14 @@ export default function Home() {
             ) : (
               <span className="text-2xl font-semibold text-amber-600">Price TBD</span>
             )}
-              <ShoppingBag className="w-6 h-6 text-amber-600 group-hover:text-amber-700" />
-
+            <ShoppingBag className="w-6 h-6 text-amber-600 group-hover:text-amber-700" />
           </div>
-          {selectedProductDetail.stock === 0 && (  // ✅ Correct variable and property
+          
+          {selectedProductDetail.stock === 0 && (
             <div className="mt-3 text-sm text-red-600 font-medium">
               Out of Stock
             </div>
           )}
-
-          
           
           {/* Full Description */}
           {selectedProductDetail.description && (

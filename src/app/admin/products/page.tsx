@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Plus, Edit, Trash2, X, Save, Package, Upload, GripVertical, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
+import ProductImageManager from '@/components/admin/ProductImageManager';
+import { Plus, Edit, Trash2, X, Save, Package, Upload, GripVertical, ArrowUp, ArrowDown, Loader2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 
 interface Product {
@@ -57,12 +58,14 @@ export default function AdminProductsPage() {
   const [isLoadingSizes, setIsLoadingSizes] = useState(false);
   const [editingSize, setEditingSize] = useState<ProductSize | null>(null);
   const [sizeFormData, setSizeFormData] = useState({
-  size_name: '',
-  price: '',
-  discount_price: '',
-  stock: '0',
-  is_active: true,
-});
+    size_name: '',
+    price: '',
+    discount_price: '',
+    stock: '0',
+    is_active: true,
+  });
+  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
+  const [currentProductForImages, setCurrentProductForImages] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -545,6 +548,17 @@ const handleDeleteSize = async (sizeId: string) => {
     >
       <Trash2 className="w-4 h-4" />
     </button>
+    <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setCurrentProductForImages(product);
+    setIsImageManagerOpen(true);
+  }}
+  className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+>
+  <ImageIcon className="w-4 h-4" />
+  <span>Images</span>
+</button>
   </div>
   <button
     onClick={() => openSizeModal(product)}
@@ -554,6 +568,7 @@ const handleDeleteSize = async (sizeId: string) => {
     <span>Manage Sizes</span>
   </button>
 </div>
+
                 </div>
               </div>
             ))}
@@ -565,6 +580,7 @@ const handleDeleteSize = async (sizeId: string) => {
           </div>
         )}
       </div>
+
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -760,6 +776,8 @@ const handleDeleteSize = async (sizeId: string) => {
           </div>
         </div>
       )}
+
+      
       {/* Size Management Modal */}
 {isSizeModalOpen && currentProductForSizes && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -897,6 +915,8 @@ const handleDeleteSize = async (sizeId: string) => {
           </form>
         </div>
 
+        
+
         {/* Sizes List */}
         <div>
           <h3 className="text-lg font-semibold text-amber-900 mb-4">Available Sizes</h3>
@@ -974,8 +994,21 @@ const handleDeleteSize = async (sizeId: string) => {
           )}
         </div>
       </div>
+      
     </div>
+    
   </div>
+  
+)}
+{/* Image Manager Modal */}
+{isImageManagerOpen && currentProductForImages && (
+  <ProductImageManager
+    productId={currentProductForImages.id}
+    onClose={() => {
+      setIsImageManagerOpen(false);
+      setCurrentProductForImages(null);
+    }}
+  />
 )}
     </AdminLayout>
   );

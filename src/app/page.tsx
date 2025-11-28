@@ -354,7 +354,7 @@ export default function Home() {
             e.stopPropagation();
             handleOrderClick(product.name);
           }}
-          disabled={!isOrderFormEnabled || isCheckingAvailability}
+          disabled={!isOrderFormEnabled || isCheckingAvailability || product.stock === 0}
           className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
         >
@@ -375,7 +375,7 @@ export default function Home() {
             e.stopPropagation();
             handleOrderClick(product.name);
           }}
-          disabled={!isOrderFormEnabled || isCheckingAvailability}
+          disabled={!isOrderFormEnabled || isCheckingAvailability || product.stock === 0}
           className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-amber-900 font-semibold rounded-xl hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(to right, #fef9c3, #fde68a)' }}
         >
@@ -778,13 +778,13 @@ export default function Home() {
               setIsDetailModalOpen(false);
               handleOrderClick(selectedProductDetail.name);
             }}
-            disabled={!isOrderFormEnabled || isCheckingAvailability}
+            disabled={!isOrderFormEnabled || isCheckingAvailability || selectedProductDetail.stock === 0}
             className={`w-full px-6 py-3 text-amber-900 font-semibold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
-              isOrderFormEnabled && !isCheckingAvailability
+              isOrderFormEnabled && !isCheckingAvailability && selectedProductDetail.stock > 0
                 ? 'hover:shadow-lg transform hover:scale-105'
                 : 'cursor-not-allowed opacity-60'
             }`}
-            style={isOrderFormEnabled && !isCheckingAvailability 
+            style={isOrderFormEnabled && !isCheckingAvailability && selectedProductDetail.stock > 0
               ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } 
               : { background: '#f3f4f6' }
             }

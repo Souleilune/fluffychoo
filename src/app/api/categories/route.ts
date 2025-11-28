@@ -33,7 +33,7 @@ export async function GET() {
       success: true,
       data: data || [],
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('API error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },

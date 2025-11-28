@@ -18,6 +18,12 @@ interface Product {
   display_order?: number;
   created_at: string;
   updated_at: string;
+  category_id?: string | null; 
+  product_categories?: {         
+    id: string;                
+    name: string;          
+    color: string     
+  } | null;                
 }
 
 interface ProductSize {
@@ -26,16 +32,25 @@ interface ProductSize {
   size_name: string;
   price: number;
   discount_price?: number | null;
-  stock: number;  // ✅ ADD THIS LINE
+  stock: number; 
   is_active: boolean;
   display_order: number;
   created_at: string;
   updated_at: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  display_order: number;
+  is_active: boolean;
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -51,6 +66,7 @@ export default function AdminProductsPage() {
   description: '',
   image: '',
   is_active: true,
+  category_id: '',
 });
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
   const [currentProductForSizes, setCurrentProductForSizes] = useState<Product | null>(null);
@@ -69,6 +85,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
@@ -86,6 +103,18 @@ export default function AdminProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+  try {
+    const response = await fetch('/api/admin/categories');
+    const data = await response.json();
+    if (data.success) {
+      setCategories(data.data.filter((cat: Category) => cat.is_active));
+    }
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+  }
+};
+
   const openCreateModal = () => {
   setEditingProduct(null);
   setSelectedFile(null);
@@ -98,6 +127,7 @@ export default function AdminProductsPage() {
     description: '',
     image: '',
     is_active: true,
+    category_id: '',
   });
   setIsModalOpen(true);
 };
@@ -114,6 +144,7 @@ export default function AdminProductsPage() {
     description: product.description || '',
     image: product.image || '',
     is_active: product.is_active !== undefined ? product.is_active : true,
+    category_id: product.category_id || '',
   });
   setIsModalOpen(true);
 };
@@ -184,6 +215,7 @@ export default function AdminProductsPage() {
           ? imageUrl.trim() 
           : '',
         is_active: formData.is_active,
+        category_id: (formData.category_id && formData.category_id.trim() !== '') ? formData.category_id.trim() : null,  // ← ADD THIS
       };
 
       if (!payload.name || payload.name === '') {
@@ -492,7 +524,7 @@ const handleDeleteSize = async (sizeId: string) => {
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-amber-900">{product.name}</h3>
-                    {/* ✅ REPLACE WITH THIS SECTION */}
+                    {/* ✅ CORRECTED - Category badge moved to top-right with other badges */}
                     <div className="flex flex-col items-end gap-1">
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -508,6 +540,8 @@ const handleDeleteSize = async (sizeId: string) => {
                       }`}>
                         Stock: {product.stock}
                       </span>
+                      {/* ✅ MOVED HERE - Category badge now in top-right corner */}
+                      
                     </div>
                   </div>
                   {product.description && (
@@ -529,8 +563,20 @@ const handleDeleteSize = async (sizeId: string) => {
                           {product.price !== null && product.price !== undefined ? `$${product.price.toFixed(2)}` : 'Price TBD'}
                         </span>
                       )}
+                      {product.product_categories && (
+                        <span 
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: `${product.product_categories.color || '#f59e0b'}20`,
+                            color: product.product_categories.color || '#f59e0b'
+                          }}
+                        >
+                          {product.product_categories.name}
+                        </span>
+                      )}
                     </div>
                   </div>
+                  
 
                   <div className="space-y-2">
   <div className="flex space-x-2">
@@ -660,6 +706,27 @@ const handleDeleteSize = async (sizeId: string) => {
                 />
                 <p className="text-xs text-amber-600 mt-1">
                   Set to 0 to mark this product as sold out
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-amber-900 mb-2">
+                  Category
+                </label>
+                <select
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                  className="w-full px-4 py-2.5 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                >
+                  <option value="">Uncategorized</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-amber-600 mt-1">
+                  Optional: Assign this product to a category
                 </p>
               </div>
 

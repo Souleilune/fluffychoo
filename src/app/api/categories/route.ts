@@ -4,36 +4,30 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// GET /api/products - Get active products for public use
+// GET /api/categories - Get all active categories (public)
 export async function GET() {
   try {
+    // Create public supabase client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     const { data, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        product_categories (
-          id,
-          name,
-          color
-        )
-      `)
+      .from('product_categories')
+      .select('id, name, color, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true });
 
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('Error fetching categories:', error);
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch products' },
+        { success: false, error: 'Failed to fetch categories', details: error.message },
         { status: 500 }
       );
     }
 
-    console.log('Products from DB:', data); // Debug log
+    console.log('Categories fetched:', data); // Debug log
 
     return NextResponse.json({
       success: true,

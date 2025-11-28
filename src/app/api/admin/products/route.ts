@@ -14,6 +14,7 @@ interface ProductUpdateData {
   display_order?: number;
   updated_at?: string;
   stock?: number; // ✅ ADD THIS LINE
+  category_id?: string | null;
 }
 
 // GET /api/admin/products - Get all products
@@ -21,9 +22,15 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('products')
-      .select('*')
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false });
+      .select(`
+        *,
+        product_categories (
+          id,
+          name,
+          color
+        )
+      `)
+      .order('display_order', { ascending: true });
 
     if (error) {
       console.error('Supabase error:', error);
@@ -59,6 +66,7 @@ export async function POST(request: NextRequest) {
     const image = body?.image;
     const is_active = body?.is_active;
     const stock = body?.stock;
+    const category_id = body?.category_id;
 
     console.log('Field analysis:', {
       name: { value: name, type: typeof name, isNull: name === null, isUndefined: name === undefined },
@@ -155,6 +163,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let processedCategoryId = null;
+      if (category_id !== null && category_id !== undefined && typeof category_id === 'string') {
+        const trimmedCategoryId = category_id.trim();
+        if (trimmedCategoryId !== '' && trimmedCategoryId !== 'null' && trimmedCategoryId !== 'undefined') {
+          processedCategoryId = trimmedCategoryId;
+        }
+      }
+
     const productData = {
       name: trimmedName,
       price: processedPrice,
@@ -164,6 +180,7 @@ export async function POST(request: NextRequest) {
       image: processedImage,
       is_active: is_active === true || is_active === 'true',
       display_order: nextOrder,
+      category_id: processedCategoryId,
     };
 
     console.log('FINAL PRODUCT DATA:', JSON.stringify(productData, null, 2));
@@ -269,6 +286,15 @@ export async function PATCH(request: NextRequest) {
 
     if (updateFields.display_order !== undefined) {
       updateData.display_order = parseInt(updateFields.display_order);
+    }
+
+    if (updateFields.category_id !== undefined) {
+      const categoryId = updateFields.category_id;
+      if (categoryId === null || categoryId === '' || categoryId === 'null' || categoryId === 'undefined') {
+        updateData.category_id = null;
+      } else {
+        updateData.category_id = categoryId;
+      }
     }
 
     updateData.updated_at = new Date().toISOString();

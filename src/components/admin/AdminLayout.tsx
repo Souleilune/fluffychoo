@@ -11,7 +11,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  MessageSquare
+  MessageSquare,
+  FolderOpen
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -28,6 +29,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
     { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
     { name: 'Suggestions', href: '/admin/suggestions', icon: MessageSquare },
   ];
 

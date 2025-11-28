@@ -17,6 +17,11 @@ interface Product {
   image: string | null;
   stock: number;
   is_active: boolean;
+  product_categories?: {
+    id: string;
+    name: string;
+    color: string;
+  } | null;
 }
 
 const faqData = [
@@ -76,6 +81,9 @@ export default function Home() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [categories, setCategories] = useState<Array<{id: string, name: string, color: string}>>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const [feedbackForm, setFeedbackForm] = useState({
     name: '',
@@ -89,6 +97,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
     checkOrderFormAvailability();
   }, []);
 
@@ -122,6 +131,28 @@ export default function Home() {
       setIsLoadingProducts(false);
     }
   };
+
+  const fetchCategories = async () => {
+  setIsLoadingCategories(true);
+  try {
+    const response = await fetch('/api/categories');
+    const data = await response.json();
+    console.log('Categories API response:', data); // Debug log
+    if (data.success && Array.isArray(data.data)) {
+      console.log('Setting categories:', data.data); // Debug log
+      setCategories(data.data); // Remove the filter - API already returns only active
+    }
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+  } finally {
+    setIsLoadingCategories(false);
+  }
+};
+
+// Filter products by selected category
+const filteredProducts = selectedCategory === 'all' 
+  ? products.filter(p => p.is_active)
+  : products.filter(p => p.is_active && p.product_categories?.id === selectedCategory);
 
   const handleOrderClick = (productName: string) => {
     setSelectedProduct(productName);
@@ -279,30 +310,81 @@ export default function Home() {
       </section>
 
       <section id="products" className="py-12 sm:py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-4">
-              Our Desserts
-            </h2>
-            <p className="text-lg text-amber-700/80 max-w-2xl mx-auto">
-              Each piece crafted with premium ingredients and baked to perfection.
-            </p>
-          </div>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-12 sm:mb-16">
+      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-4">
+        Our Desserts
+      </h2>
+      <p className="text-lg text-amber-700/80 max-w-2xl mx-auto">
+        Each piece crafted with premium ingredients and baked to perfection.
+      </p>
+    </div>
 
-          {isLoadingProducts ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-12 h-12 text-amber-600 animate-spin mb-4" />
-              <p className="text-amber-700 text-lg">Loading our delicious products...</p>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-20">
-              <Package className="w-16 h-16 text-amber-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-semibold text-amber-900 mb-2">No Products Available</h3>
-              <p className="text-amber-700">Check back soon for our delicious treats!</p>
-            </div>
-          ) : (
+    {/* Category Tabs */}
+    <div className="flex justify-center mb-12">
+      <div className="inline-flex flex-wrap justify-center gap-3 p-2 bg-amber-50 rounded-2xl">
+        {/* All Tab */}
+        <button
+          onClick={() => setSelectedCategory('all')}
+          className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            selectedCategory === 'all'
+              ? 'text-amber-900 shadow-lg transform scale-105'
+              : 'text-amber-700 hover:bg-amber-100'
+          }`}
+          style={selectedCategory === 'all' ? { background: 'linear-gradient(to right, #fef9c3, #fde68a)' } : {}}
+        >
+          All Desserts
+        </button>
+
+        {/* Category Tabs */}
+        {categories.map((category) => (
+          <button
+            key={category.id}
+            onClick={() => setSelectedCategory(category.id)}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center space-x-2 ${
+              selectedCategory === category.id
+                ? 'shadow-lg transform scale-105'
+                : 'hover:shadow-md'
+            }`}
+            style={
+              selectedCategory === category.id
+                ? {
+                    backgroundColor: category.color,
+                    color: '#ffffff',
+                  }
+                : {
+                    backgroundColor: `${category.color}20`,
+                    color: category.color,
+                  }
+            }
+          >
+            <span>{category.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Products Grid */}
+    {isLoadingProducts ? (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-12 h-12 text-amber-600 animate-spin mb-4" />
+        <p className="text-amber-700 text-lg">Loading our delicious products...</p>
+      </div>
+    ) : filteredProducts.length === 0 ? (
+      <div className="text-center py-20">
+        <Package className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+        <h3 className="text-2xl font-semibold text-amber-900 mb-2">
+          {selectedCategory === 'all' ? 'No Products Available' : 'No Products in This Category'}
+        </h3>
+        <p className="text-amber-700">
+          {selectedCategory === 'all' 
+            ? 'Check back soon for our delicious treats!' 
+            : 'Try selecting a different category'}
+        </p>
+      </div>
+    ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.filter(p => p.is_active).map((product) => (
+              {filteredProducts.map((product) => (
                 <div 
                   key={product.id} 
                   onClick={() => handleProductClick(product)}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import Image from 'next/image';
 
@@ -25,11 +25,8 @@ export default function ProductDetailCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchImages();
-  }, [productId]);
-
-  const fetchImages = async () => {
+  // ✅ Wrap fetchImages with useCallback
+  const fetchImages = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/products/${productId}/images`);
@@ -56,8 +53,13 @@ export default function ProductDetailCarousel({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId, fallbackImage]);  // ✅ Add dependencies
 
+  useEffect(() => {
+    fetchImages();
+  }, [fetchImages]);
+
+  
   const goToPrevious = () => {
     setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
   };

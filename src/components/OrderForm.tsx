@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, Trash2, Plus, Link } from 'lucide-react';
+import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, Trash2, Plus } from 'lucide-react';
 import Image from 'next/image';
 
 // Extend Window interface for grecaptcha
@@ -77,7 +77,7 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   
   const [deliveryPolicyAccepted, setDeliveryPolicyAccepted] = useState(false);
-  const [courierCheckbox, setCourierCheckbox] = useState(false);
+  const [_courierCheckbox, setCourierCheckbox] = useState(false);
   const [productSizes, setProductSizes] = useState<ProductSize[]>([]);
   const [selectedSizeId, setSelectedSizeId] = useState('');
   const [isLoadingSizes, setIsLoadingSizes] = useState(false);
@@ -310,15 +310,7 @@ const fetchProductSizes = async (productId: string) => {
   ));
 };
 
- const handleUpdateQuantity = (productId: string, sizeId: string, newQuantity: number) => {
-  if (newQuantity < 1) return;
 
-  setOrderItems(orderItems.map(item => 
-    (item.productId === productId && item.sizeId === sizeId)
-      ? { ...item, quantity: newQuantity }
-      : item
-  ));
-};
 
   const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

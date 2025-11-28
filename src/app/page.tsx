@@ -83,7 +83,7 @@ export default function Home() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [categories, setCategories] = useState<Array<{id: string, name: string, color: string}>>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [_isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const [feedbackForm, setFeedbackForm] = useState({
     name: '',

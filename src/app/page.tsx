@@ -628,6 +628,7 @@ export default function Home() {
                 <li><Link href="#faq" className="hover:text-white transition-colors">FAQs</Link></li>
                 <li><Link href="#feedback" className="hover:text-white transition-colors">Share Feedback</Link></li>
                 <li><Link href="admin/login" className="hover:text-white transition-colors">Fluffychoo</Link></li>
+                <li><Link href="track-order" className="hover:text-white transition-colors">Track Order</Link></li>
               </ul>
             </div>
 

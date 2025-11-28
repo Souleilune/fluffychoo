@@ -189,6 +189,13 @@ export function generateOrderConfirmationEmail(orderDetails: {
                         <p class="text-secondary" style="margin: 0; color: #78350f; font-size: 14px; font-family: 'Poppins', sans-serif;">
                           Questions? Reply to this email or give us a call.
                         </p>
+
+                        <p style="margin: 16px 0 0; text-align: center;">
+                          <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://fluffychoo.vercel.app'}/track-order" 
+                            style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                            Track Your Order
+                          </a>
+                        </p>
                       </div>
 
                     </td>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, Trash2, Plus } from 'lucide-react';
+import { X, ShoppingBag, Loader2, Upload, CheckCircle, ChevronRight, ChevronLeft, AlertCircle, Clock, Trash2, Plus, Link } from 'lucide-react';
 import Image from 'next/image';
 
 // Extend Window interface for grecaptcha
@@ -1233,6 +1233,13 @@ const fetchProductSizes = async (productId: string) => {
                         <p className="text-xs text-amber-700 mt-1">
                           Please save this reference number for tracking your order.
                         </p>
+                        <a 
+  href="/track-order"
+  className="inline-block mt-3 px-6 py-2.5 bg-yellow-200 hover:bg-yellow-300 text-amber-900 font-semibold text-sm rounded-lg transition-colors text-center"
+>
+  Track your order status 
+</a>
+                        
                       </div>
                     )}
                     

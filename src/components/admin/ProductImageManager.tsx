@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Upload, X, GripVertical, Loader2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 
@@ -24,11 +24,8 @@ export default function ProductImageManager({ productId, onClose }: ProductImage
   const [isUploading, setIsUploading] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchImages();
-  }, [productId]);
-
-  const fetchImages = async () => {
+  // ✅ Wrap fetchImages with useCallback
+  const fetchImages = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/admin/products/${productId}/images`);
@@ -41,7 +38,13 @@ export default function ProductImageManager({ productId, onClose }: ProductImage
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId]);  // ✅ Add dependency
+
+  useEffect(() => {
+    fetchImages();
+  }, [fetchImages]);  // ✅ Now includes fetchImages
+
+  
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

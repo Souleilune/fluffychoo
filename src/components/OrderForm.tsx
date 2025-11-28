@@ -78,10 +78,6 @@ export default function OrderForm({ isOpen, onClose, selectedProduct }: OrderFor
   
   const [deliveryPolicyAccepted, setDeliveryPolicyAccepted] = useState(false);
   const [courierCheckbox, setCourierCheckbox] = useState(false);
-  const [sundayOnlyCheckbox, setSundayOnlyCheckbox] = useState(false);
-  const [courierBookingCheckbox, setCourierBookingCheckbox] = useState(false);
-  const [deliveryDetailsCheckbox, setDeliveryDetailsCheckbox] = useState(false);
-  const [noCancellationCheckbox, setNoCancellationCheckbox] = useState(false);
   const [productSizes, setProductSizes] = useState<ProductSize[]>([]);
   const [selectedSizeId, setSelectedSizeId] = useState('');
   const [isLoadingSizes, setIsLoadingSizes] = useState(false);
@@ -236,10 +232,6 @@ const fetchProductSizes = async (productId: string) => {
     setSelectedSizeId(''); 
     setDeliveryPolicyAccepted(false);
     setCourierCheckbox(false);
-    setSundayOnlyCheckbox(false);
-    setCourierBookingCheckbox(false);
-    setDeliveryDetailsCheckbox(false);
-    setNoCancellationCheckbox(false);
     setPaymentProof(null);
     setPaymentProofPreview('');
     setCaptchaToken(null);
@@ -284,7 +276,6 @@ const fetchProductSizes = async (productId: string) => {
   if (!product || !size) return;
 
   // Create unique key combining product and size
-  const itemKey = `${product.id}-${size.id}`;
   const existingItemIndex = orderItems.findIndex(
     item => item.productId === product.id && item.sizeId === size.id
   );

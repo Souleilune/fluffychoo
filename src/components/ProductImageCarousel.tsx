@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';  // ✅ Add useCallback import
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import Image from 'next/image';
 
@@ -27,11 +27,8 @@ export default function ProductImageCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchImages();
-  }, [productId]);
-
-  const fetchImages = async () => {
+  // ✅ Wrap fetchImages with useCallback
+  const fetchImages = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/products/${productId}/images`);
@@ -40,7 +37,6 @@ export default function ProductImageCarousel({
       if (data.success && data.data.length > 0) {
         setImages(data.data);
       } else if (fallbackImage) {
-        // Use fallback image if no images in product_images table
         setImages([{
           id: 'fallback',
           image_url: fallbackImage,
@@ -49,7 +45,6 @@ export default function ProductImageCarousel({
       }
     } catch (error) {
       console.error('Failed to fetch images:', error);
-      // Use fallback on error
       if (fallbackImage) {
         setImages([{
           id: 'fallback',
@@ -60,7 +55,11 @@ export default function ProductImageCarousel({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId, fallbackImage]);  // ✅ Add dependencies
+
+  useEffect(() => {
+    fetchImages();
+  }, [fetchImages]);  // ✅ Now includes fetchImages
 
   const goToPrevious = (e: React.MouseEvent) => {
     e.stopPropagation();
